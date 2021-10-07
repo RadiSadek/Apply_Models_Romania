@@ -1,0 +1,247 @@
+
+
+################################################################################
+#               Joint script for Application and Behavioral scoring            #
+#      Apply Logistic Regression on all products (Flexcredit Romania)          #
+#                          Version 1.0 (2021/10/06)                            #
+################################################################################
+
+
+
+########################
+### Initial settings ###
+########################
+
+# Library
+suppressMessages(suppressWarnings(library(RMySQL)))
+suppressMessages(suppressWarnings(library(here)))
+suppressMessages(suppressWarnings(library(dotenv)))
+suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(library(openxlsx)))
+suppressMessages(suppressWarnings(require(jsonlite)))
+
+
+# Defines the directory where custom .env file is located
+load_dot_env(file = here('.env'))
+
+
+#########################
+### Command arguments ###
+#########################
+
+args <- commandArgs(trailingOnly = TRUE)
+application_id <- args[1]
+product_id <- args[2]
+
+
+#######################
+### Manual settings ###
+#######################
+
+# Defines the directory where the RScript is located
+base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
+
+
+
+#####################
+####### MySQL #######
+#####################
+
+db_host <- Sys.getenv("DB_HOST", 
+                      unset = "localhost", 
+                      names = FALSE)
+db_port <- strtoi(Sys.getenv("DB_PORT", 
+                             unset = "3306", 
+                             names = FALSE))
+db_name <- Sys.getenv("DB_DATABASE", 
+                      unset = "citycash", 
+                      names = FALSE)
+db_username <- Sys.getenv("DB_USERNAME", 
+                          unset = "root", 
+                          names = FALSE)
+db_password <- Sys.getenv("DB_PASSWORD", 
+                          unset = "secret", 
+                          names = FALSE)
+con <- dbConnect(MySQL(), user=db_username, 
+                 password=db_password, dbname=db_name, 
+                 host=db_host, port = db_port)
+sqlMode <- paste("SET sql_mode=''", sep ="")
+suppressWarnings(fetch(dbSendQuery(con, sqlMode), 
+                       n=-1))
+
+
+#################################
+####### Load source files #######
+#################################
+
+# Load other r files
+source(file.path(base_dir,"Additional_Restrictions.r"))
+source(file.path(base_dir,"Addresses.r"))
+source(file.path(base_dir,"Adjust_Scoring_Prior_Approval.r"))
+source(file.path(base_dir,"Logistic_App_CityCash.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_Fraud.r"))
+source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
+source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
+source(file.path(base_dir,"Useful_Functions.r"))
+source(file.path(base_dir,"Empty_Fields.r"))
+source(file.path(base_dir,"Cutoffs.r"))
+source(file.path(base_dir,"SQL_queries.r"))
+source(file.path(base_dir,"Disposable_Income.r"))
+source(file.path(base_dir,"Behavioral_Variables.r"))
+source(file.path(base_dir,"Normal_Variables.r"))
+source(file.path(base_dir,"CKR_variables.r"))
+source(file.path(base_dir,"Generate_Adjust_Score.r"))
+
+
+
+########################
+####### Settings #######
+########################
+
+# Load predefined libraries
+rdata <- file.path(base_dir, "rdata", 
+                   "citycash_repeat.rdata")
+load(rdata)
+rdata2 <- file.path(base_dir, "rdata", 
+                    "citycash_app.rdata")
+load(rdata2)
+rdata3 <- file.path(base_dir, "rdata", 
+                    "credirect_installments.rdata")
+load(rdata3)
+rdata4 <- file.path(base_dir, "rdata", 
+                    "credirect_payday.rdata")
+load(rdata4)
+rdata5 <- file.path(base_dir, "rdata", 
+                    "credirect_repeat.rdata")
+load(rdata5)
+rdata6 <- file.path(base_dir, "rdata", 
+                    "credirect_app_fraud.rdata")
+load(rdata6)
+
+
+# Load Risky Coordinates
+risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
+                                    "risky_coordinates.csv"),sep=";")
+
+
+
+
+####################################
+### Read database and build data ###
+####################################
+
+# Read credits applications
+all_df <- suppressWarnings(fetch(dbSendQuery(con, 
+              gen_big_sql_query(db_name,application_id)), n=-1))
+
+# Apply some checks to main credit dataframe
+if(!is.na(product_id)){
+  all_df$product_id <- product_id
+}
+if(nrow(all_df)>1){
+  all_df <- all_df[!duplicated(all_df$application_id),]
+}
+
+
+# Read product's periods and amounts
+products  <- suppressWarnings(fetch(dbSendQuery(con, 
+               gen_products_query(db_name,all_df)), n=-1))
+products_desc <- suppressWarnings(fetch(dbSendQuery(con, 
+               gen_products_query_desc(db_name,all_df)), n=-1))
+
+
+
+
+############################################
+### Compute and rework additional fields ###
+############################################
+
+# Set period variable (monthly, twice weekly, weekly)
+period <- products_desc$period
+
+
+# Compute and generate general variables
+all_df <- gen_norm_var(period,all_df,products,1)
+
+
+# Compute income variables
+all_df$total_income <- suppressWarnings(fetch(dbSendQuery(con, 
+   gen_income_sql_query (db_name,all_df)), n=-1))$total_income
+
+
+# Read relevant product amounts (not superior to amount of application)
+products <- subset(products, products$amount<=all_df$amount)
+
+
+# Prepare final dataframe
+scoring_df <- gen_final_df(products,application_id)
+
+
+# Make back-up dataframe
+df <- all_df
+
+
+# Correct empty and missing value fields (to standard format)
+df <- gen_null_to_na(df)
+
+
+# Get if empty field threshold is passed
+empty_fields <- gen_empty_fields(df)
+threshold_empty <- 4
+
+
+# Readjust fields
+df <- gen_norm_var2(df)
+
+
+
+############################################################
+### Apply model coefficients according to type of credit ###
+############################################################
+
+scoring_df <- gen_apply_score(
+  empty_fields,threshold_empty,
+  df,scoring_df,products,df_Log_Flexcredit_App,
+  period,all_df)
+
+
+# Build column PD
+if(!("pd" %in% names(scoring_df))){
+  scoring_df$pd <- NA
+}
+
+
+######################################
+### Generate final output settings ###
+######################################
+
+# Generate scoring dataframe
+scoring_df$created_at <- Sys.time()
+scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
+                            "pd","created_at")]
+
+
+# Create column for table display
+scoring_df <- gen_final_table_display(scoring_df)
+
+
+# Update table credits applications scoring
+write_sql_query <- paste("
+  DELETE FROM ",db_name,".loan_scoring WHERE loan_id=",
+  application_id, sep="")
+suppressMessages(dbSendQuery(con,write_sql_query))
+suppressMessages(dbWriteTable(con, name = "loan_scoring", 
+  value = scoring_df,
+  field.types = c(loan_id="numeric", amount="integer", 
+  installments="integer", score="character(20)",color="integer", 
+  display_score="character(20)",pd="numeric",created_at="datetime"),
+  row.names = F, append = T))
+
+
+
+#######
+# END #
+#######
+
