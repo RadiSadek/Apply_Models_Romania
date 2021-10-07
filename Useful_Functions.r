@@ -4,21 +4,9 @@
 ###################################################
 
 # Define function to get apply cutoffs
-gen_group_scores <- function(var,office,flag_beh,flag_credirect,
-                             flag_credit_next_salary){
-  if(flag_credirect==0 & flag_beh==0){
-    if(flag_bad_office(office)==1){
-      cutoffs <- cu_app_city_bad_offices
-    } else {
-      cutoffs <- cu_app_city_norm_offices
-    }}
-  else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==1){
-    cutoffs <- cu_app_cred_flex}
-  else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==0){
-    cutoffs <- cu_app_cred_user}
-  else if (flag_credirect==0 & flag_beh==1){
-    cutoffs <- cu_beh_city}
-  else {cutoffs <- cu_beh_cred}
+gen_group_scores <- function(var){
+   
+   cutoffs <- cu_app_flexcredit
   if (var>cutoffs[1]){output="Bad"} 
   else if (var>cutoffs[2]) {output="Indeterminate"} 
   else if (var>cutoffs[3]) {output="Good 1"} 
@@ -43,14 +31,14 @@ gen_final_df <- function(products,application_id){
   }
   
   # Make dataframe of all possible amounts/installments
-  vect_citycash_installment <- sort(as.numeric(unique(unlist(table_citycash))))
-  vect_citycash_amount <- colnames(table_citycash, do.NULL = TRUE, 
+  vect_flex_installment <- sort(as.numeric(unique(unlist(table_flex))))
+  vect_flex_amount <- colnames(table_flex, do.NULL = TRUE, 
                                    prefix = "col")
-  PD_citycash <- matrix("", ncol = length(vect_citycash_installment), 
-                        nrow = length(vect_citycash_amount))
-  colnames(PD_citycash) <- vect_citycash_installment
-  rownames(PD_citycash) <- vect_citycash_amount
-  melted <- as.data.frame(melt(t(PD_citycash)))
+  PD_flex <- matrix("", ncol = length(vect_flex_installment), 
+                        nrow = length(vect_flex_amount))
+  colnames(PD_flex) <- vect_flex_installment
+  rownames(PD_flex) <- vect_flex_amount
+  melted <- as.data.frame(melt(t(PD_flex)))
   names(melted) <- c("period","amount","value")
   melted$value <- as.numeric(melted$value)
   
@@ -58,7 +46,7 @@ gen_final_df <- function(products,application_id){
   for(i in 1:nrow(melted)){
     c1 <- as.character(melted$period[i]) 
     c2 <- as.character(melted$amount[i])
-    melted$value[i] <- ifelse(is.na(table_citycash[c1,c2]),0,1)
+    melted$value[i] <- ifelse(is.na(table_flex[c1,c2]),0,1)
   }
   scoring_df <- subset(melted, melted$value==1)[,1:2]
   names(scoring_df) <- c("period","amount")

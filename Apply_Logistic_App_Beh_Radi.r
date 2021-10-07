@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 1
+application_id <- args[1]
+#application_id <- 1
 product_id <- NA
 
 
@@ -47,6 +47,9 @@ setwd(main_dir)
 
 
 # Load other r files
+source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Empty_Fields.r", sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Generate_Adjust_Score.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_App_Flexcredit.r", 
   sep=""))
@@ -121,20 +124,12 @@ df <- gen_null_to_na(df)
 
 
 # Get if empty field threshold is passed
-empty_fields <- gen_empty_fields(flag_beh,flag_credirect,df)
+empty_fields <- gen_empty_fields(df)
 threshold_empty <- 4
 
 
 # Readjust fields
 df <- gen_norm_var2(df)
-
-
-# Compute flag if has current active
-if(flag_beh_company==1){
-  flag_active <- gen_flag_if_curr_active(all_id,application_id)
-} else {
-  flag_active <- cbind(NA,NA)
-}
 
 
 
@@ -143,12 +138,9 @@ if(flag_beh_company==1){
 ############################################################
 
 scoring_df <- gen_apply_score(
-  empty_fields,threshold_empty,flag_exclusion,
-  flag_varnat,flag_is_dead,flag_credit_next_salary,flag_credirect,
-  flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
-  df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
-  df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,0)
+  empty_fields,threshold_empty,
+  df,scoring_df,products,df_Log_Flexcredit_App,
+  period,all_df)
 
 
 # Build column PD
@@ -163,23 +155,6 @@ if(!("pd" %in% names(scoring_df))){
 
 # Generate scoring dataframe
 scoring_df$created_at <- Sys.time()
-scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "pd","created_at")]
-
-
-# Readjust score when applicable
-scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
-   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
-   application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-   flag_beh_company,flag_cashpoint)
-
-
-# Reselect columns 
-scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "pd","created_at")]
-
-
-# Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
 
@@ -201,49 +176,6 @@ final <- as.data.frame(cbind(scoring_df$application_id[1],
  scoring_df$period==unique(scoring_df$period)
  [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
 names(final) <- c("id","score","display_score")
-final$highest_score <- 
-  ifelse(length(names(table(scoring_df$score))
-      [names(table(scoring_df$score)) %in% c("Good 4")])!=0,"Good 4",
-  ifelse(length(names(table(scoring_df$score))
-              [names(table(scoring_df$score)) %in% c("Good 3")])!=0,"Good 3",
-  ifelse(length(names(table(scoring_df$score))
-              [names(table(scoring_df$score)) %in% c("Good 2")])!=0,"Good 2",
-  ifelse(length(names(table(scoring_df$score))
-              [names(table(scoring_df$score)) %in% c("Good 1")])!=0,"Good 1",
-  ifelse(length(names(table(scoring_df$score))
-              [names(table(scoring_df$score)) %in% c("Indeterminate")])!=0,
-         "Indeterminate",
-  ifelse(length(names(table(scoring_df$score))
-        [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
-
-final$PD <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
-  [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-      & 
-  scoring_df$period==unique(scoring_df$period)
-  [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
-final$highest_amount <- max(scoring_df$amount)
-final$flag_beh <- flag_beh
-final$flag_beh_company <- flag_beh_company
-final$flag_credirect <- flag_credirect
-final$flag_next_salary <- flag_credit_next_salary
-final$flag_exclusion <- flag_exclusion
-final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
-final$flag_fraud <- fraud_flag
-final$flag_new_credirect_old_city <- flag_new_credirect_old_city
-final$flag_varnat <- flag_varnat
-final$flag_cession <- flag_cession
-final$flag_active <- flag_active[1,1]
-final$flag_active_hidden <- flag_active[1,2]
-final$flag_risky_address <- flag_risky_address$flag_risky_address
-final$lat <- flag_risky_address$lat
-final$lon <- flag_risky_address$lon
-final$type <- flag_risky_address$hierarchy
-final$precision <- flag_risky_address$location_precision
-final$status_active_total <- all_df$status_active_total
-final$status_finished_total <- all_df$status_finished_total
-final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
-final$source_entity_count_total <- all_df$source_entity_count_total
-final$office <- all_df$office_id
 
 
 # Read and write
