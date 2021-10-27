@@ -6,5 +6,5 @@
 
 
 # Application Flexcredit
-cu_app_flexcredit <- c(0.5,0.4,0.325,0.25,0.175)
+cu_app_flexcredit <- c(0.5,0.425,0.35,0.275,0.2)
 

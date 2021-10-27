@@ -26,7 +26,7 @@ gen_app_flex <- function(df,scoring_df,products,df_Log_Flexcredit_App,
   df$work_experience <- as.factor(df$work_experience)
   
   df$total_income <- ifelse(
-    is.na(df$total_income),"other",
+    is.na(df$total_income),"2400_3500",
     ifelse(df$total_income<=2400,"less_2400",
     ifelse(df$total_income<=3500,"2400_3500",
     ifelse(df$total_income<=4500,"3500_4500",

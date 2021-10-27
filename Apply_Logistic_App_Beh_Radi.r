@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1
+application_id <- 31711
 product_id <- NA
 
 
@@ -176,7 +176,11 @@ final <- as.data.frame(cbind(scoring_df$application_id[1],
  scoring_df$period==unique(scoring_df$period)
  [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
 names(final) <- c("id","score","display_score")
-
+final$pd <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
+    [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                          & 
+             scoring_df$period==unique(scoring_df$period)
+    [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,
