@@ -75,24 +75,13 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
-source(file.path(base_dir,"Additional_Restrictions.r"))
-source(file.path(base_dir,"Addresses.r"))
-source(file.path(base_dir,"Adjust_Scoring_Prior_Approval.r"))
-source(file.path(base_dir,"Logistic_App_CityCash.r"))
-source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
-source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
-source(file.path(base_dir,"Logistic_App_Credirect_Fraud.r"))
-source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
-source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
-source(file.path(base_dir,"Useful_Functions.r"))
-source(file.path(base_dir,"Empty_Fields.r"))
 source(file.path(base_dir,"Cutoffs.r"))
-source(file.path(base_dir,"SQL_queries.r"))
-source(file.path(base_dir,"Disposable_Income.r"))
-source(file.path(base_dir,"Behavioral_Variables.r"))
-source(file.path(base_dir,"Normal_Variables.r"))
-source(file.path(base_dir,"CKR_variables.r"))
+source(file.path(base_dir,"Empty_Fields.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
+source(file.path(base_dir,"Normal_Variables.r"))
+source(file.path(base_dir,"Logistic_App_Flexcredit.r"))
+source(file.path(base_dir,"SQL_queries.r"))
+source(file.path(base_dir,"Useful_Functions.r"))
 
 
 
@@ -101,30 +90,8 @@ source(file.path(base_dir,"Generate_Adjust_Score.r"))
 ########################
 
 # Load predefined libraries
-rdata <- file.path(base_dir, "rdata", 
-                   "citycash_repeat.rdata")
+rdata <- file.path(base_dir, "rdata","flexcredit_app.rdata")
 load(rdata)
-rdata2 <- file.path(base_dir, "rdata", 
-                    "citycash_app.rdata")
-load(rdata2)
-rdata3 <- file.path(base_dir, "rdata", 
-                    "credirect_installments.rdata")
-load(rdata3)
-rdata4 <- file.path(base_dir, "rdata", 
-                    "credirect_payday.rdata")
-load(rdata4)
-rdata5 <- file.path(base_dir, "rdata", 
-                    "credirect_repeat.rdata")
-load(rdata5)
-rdata6 <- file.path(base_dir, "rdata", 
-                    "credirect_app_fraud.rdata")
-load(rdata6)
-
-
-# Load Risky Coordinates
-risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
-                                    "risky_coordinates.csv"),sep=";")
-
 
 
 
