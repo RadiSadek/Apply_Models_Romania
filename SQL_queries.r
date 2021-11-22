@@ -51,7 +51,8 @@ gen_products_query_desc <- function(db_name,all_df){
 gen_income_sql_query <- function(db_name,all_df){
   return(paste("SELECT SUM(AMOUNT) AS total_income
   FROM ",db_name,".client_incomes
-  WHERE client_id=",all_df$master_client_id, sep=""))
+  WHERE incomeable_type='App\\\\Models\\\\Clients\\\\Client'
+  AND incomeable_id=",all_df$master_client_id, sep=""))
 }
 
 
