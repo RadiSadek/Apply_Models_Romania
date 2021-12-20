@@ -6,10 +6,10 @@
 # Function to apply scoring model 
 gen_apply_score <- function(empty_fields,threshold_empty,
                             df,scoring_df,products,df_Log_Flexcredit_App,
-                            period,all_df){
+                            period,all_df,flag_beh){
   
   # Apply model coefficients according to type of credit 
-  if (empty_fields>=threshold_empty){
+  if (empty_fields>=threshold_empty | flag_beh==1){
     
     scoring_df$score <- "NULL"
     scoring_df$color <- 2

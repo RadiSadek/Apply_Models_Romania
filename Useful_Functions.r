@@ -17,11 +17,10 @@ gen_group_scores <- function(var){
 }
 
 # Define function to prepare final data frame to aggregate scoring
-gen_final_df <- function(products,application_id){
+gen_final_df <- function(products,application_id,all_df){
   
-  suppressMessages(suppressWarnings(require("reshape")))
   # Read table with number of payments/number of for city cash
-  table_flex <- table(products$installments, products$amount)
+table_flex <- table(products$installments, products$amount)
   for (i in 1:nrow(table_flex)){
     for (j in 1:ncol(table_flex)){
       if (table_flex[i,j]>0){

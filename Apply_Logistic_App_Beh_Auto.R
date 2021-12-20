@@ -103,6 +103,7 @@ load(rdata)
 all_df <- suppressWarnings(fetch(dbSendQuery(con, 
               gen_big_sql_query(db_name,application_id)), n=-1))
 
+
 # Apply some checks to main credit dataframe
 if(!is.na(product_id)){
   all_df$product_id <- product_id
@@ -114,10 +115,28 @@ if(nrow(all_df)>1){
 
 # Read product's periods and amounts
 products  <- suppressWarnings(fetch(dbSendQuery(con, 
-               gen_products_query(db_name,all_df)), n=-1))
+   gen_products_query(db_name,all_df)), n=-1))
 products_desc <- suppressWarnings(fetch(dbSendQuery(con, 
-               gen_products_query_desc(db_name,all_df)), n=-1))
+   gen_products_query_desc(db_name,all_df)), n=-1))
 
+
+# Get closets to product amount and installments 
+all_df$installments <- products$installments[
+   which.min(abs(products$installments - all_df$installments))]
+all_df$amount <- products$amount[
+   which.min(abs(products$amount - all_df$amount))]
+
+
+# Check all credits of client
+all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
+  gen_all_credits_query(db_name,all_df)), n=-1))
+if(nrow(all_credits)>0){
+  all_credits <- subset(all_credits,!is.na(all_credits$activated_at))
+}
+
+
+# Compute flag repeats
+flag_beh <- ifelse(nrow(all_credits)>0,1,0)
 
 
 
@@ -143,7 +162,7 @@ products <- subset(products, products$amount<=all_df$amount)
 
 
 # Prepare final dataframe
-scoring_df <- gen_final_df(products,application_id)
+scoring_df <- gen_final_df(products,application_id,all_df)
 
 
 # Make back-up dataframe
@@ -171,7 +190,7 @@ df <- gen_norm_var2(df)
 scoring_df <- gen_apply_score(
   empty_fields,threshold_empty,
   df,scoring_df,products,df_Log_Flexcredit_App,
-  period,all_df)
+  period,all_df,flag_beh)
 
 
 # Build column PD
