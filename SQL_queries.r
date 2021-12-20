@@ -57,7 +57,7 @@ gen_income_sql_query <- function(db_name,all_df){
 
 # Define query for getting all credits for client 
 gen_all_credits_query <- function(db_name,all_df){
-  return(paste("SELECT master_client_id, activated_at, amount, installments
+  return(paste("SELECT id, master_client_id, activated_at, amount, installments
   FROM ",db_name,".loans 
   WHERE master_client_id=",all_df$master_client_id, sep =""))
 }

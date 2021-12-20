@@ -131,7 +131,8 @@ all_df$amount <- products$amount[
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
   gen_all_credits_query(db_name,all_df)), n=-1))
 if(nrow(all_credits)>0){
-  all_credits <- subset(all_credits,!is.na(all_credits$activated_at))
+  all_credits <- subset(all_credits,!is.na(all_credits$activated_at) & 
+                        all_credits$id!=application_id)
 }
 
 

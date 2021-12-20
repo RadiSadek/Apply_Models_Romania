@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 1 
+application_id <- args[1]
+#application_id <- 27006 
 product_id <- NA
 
 
@@ -98,7 +98,8 @@ all_df$amount <- products$amount[
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
   gen_all_credits_query(db_name,all_df)), n=-1))
 if(nrow(all_credits)>0){
-  all_credits <- subset(all_credits,!is.na(all_credits$activated_at))
+  all_credits <- subset(all_credits,!is.na(all_credits$activated_at) & 
+                        all_credits$id!=application_id)
 }
 
 
@@ -181,23 +182,24 @@ scoring_df <- gen_final_table_display(scoring_df)
 
 
 # Create output dataframe
-final <- as.data.frame(cbind(scoring_df$application_id[1],
+final <- as.data.frame(cbind(scoring_df$loan_id[1],
  scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
    [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
                     & 
- scoring_df$period==unique(scoring_df$period)
-   [which.min(abs(all_df$installments - unique(scoring_df$period)))]],
+ scoring_df$installments==unique(scoring_df$installments)
+   [which.min(abs(all_df$installments - unique(scoring_df$installments)))]],
  scoring_df$display_score[scoring_df$amount== unique(scoring_df$amount)
    [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
                   & 
- scoring_df$period==unique(scoring_df$period)
- [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
+ scoring_df$installments==unique(scoring_df$installments)
+ [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]))
 names(final) <- c("id","score","display_score")
 final$pd <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
     [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
                           & 
-             scoring_df$period==unique(scoring_df$period)
-    [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
+             scoring_df$installments==unique(scoring_df$installments)
+    [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]
+final$flag_beh <- flag_beh
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,
