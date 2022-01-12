@@ -4,9 +4,13 @@
 ###################################################
 
 # Define function to get apply cutoffs
-gen_group_scores <- function(var){
-   
-   cutoffs <- cu_app_flexcredit
+gen_group_scores <- function(var,flag_beh){
+  
+  if(flag_beh==1){
+    cutoffs <- cu_beh_flexcredit
+  } else {
+    cutoffs <- cu_app_flexcredit
+  }
   if (var>cutoffs[1]){output="Bad"} 
   else if (var>cutoffs[2]) {output="Indeterminate"} 
   else if (var>cutoffs[3]) {output="Good 1"} 

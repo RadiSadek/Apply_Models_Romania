@@ -75,11 +75,13 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
+source(file.path(base_dir,"Behavioral_Variables.r"))
 source(file.path(base_dir,"Cutoffs.r"))
 source(file.path(base_dir,"Empty_Fields.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
 source(file.path(base_dir,"Normal_Variables.r"))
 source(file.path(base_dir,"Logistic_App_Flexcredit.r"))
+source(file.path(base_dir,"Logistic_Beh_Flexcredit.r"))
 source(file.path(base_dir,"SQL_queries.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
 
@@ -91,6 +93,7 @@ source(file.path(base_dir,"Useful_Functions.r"))
 
 # Load predefined libraries
 rdata <- file.path(base_dir, "rdata","flexcredit_app.rdata")
+rdata <- file.path(base_dir, "rdata","flexcredit_beh.rdata")
 load(rdata)
 
 
@@ -131,13 +134,62 @@ all_df$amount <- products$amount[
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
   gen_all_credits_query(db_name,all_df)), n=-1))
 if(nrow(all_credits)>0){
-  all_credits <- subset(all_credits,!is.na(all_credits$activated_at) & 
-                        all_credits$id!=application_id)
+  all_credits <- subset(all_credits,all_credits$id==application_id | 
+    (!is.na(all_credits$activated_at) & 
+    all_credits$activated_at<=all_df$created_at))
 }
 
 
+# Read all previous active or terminated credits of client
+all_id <- subset(all_credits, 
+  all_credits$id==application_id | all_credits$status %in% c(9:12,15)
+) 
+
+
 # Compute flag repeats
-flag_beh <- ifelse(nrow(all_credits)>0,1,0)
+flag_beh <- ifelse(nrow(all_id[all_id$id!=application_id,])>0,1,0)
+
+
+# Select for max delay if past AND active: must have at least 30 days of passed
+all_id_max_delay <- all_id[all_id$id != application_id,]
+all_actives_past <- subset(all_id, 
+        all_id$id!=application_id & all_id$status==9)
+if(nrow(all_actives_past)>0){
+  all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,
+        all_actives_past,all_id_max_delay)
+}
+
+
+# Get correct max days of delay (of relevant previous credits)
+nrow_all_id_max_delay <- nrow(all_id_max_delay)
+if (nrow_all_id_max_delay>=1){
+  list_ids_max_delay <- gen_select_relevant_ids(all_id_max_delay,
+      nrow_all_id_max_delay)
+  data_plan_main_select <- suppressWarnings(fetch(dbSendQuery(con, 
+      gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
+} 
+
+
+
+# Generate variables for payments of previous credits
+nrow_all_id <- nrow(all_id)
+all_id <- all_id[order(all_id$activated_at),]
+if(nrow_all_id>1){
+  prev_paid_days <- gen_prev_paid_days(all_id)
+  installments <- gen_last_total_amount(all_id)
+}
+
+
+# Compute and generate variables specific for behavioral model
+data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
+                                    data_plan_main_select,NA)
+all_df <- gen_other_rep(nrow_all_id,all_id,all_df,
+                        data_plan_main_select_def,application_id)
+
+
+# Compute ratio of number of payments
+all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/	
+    installments$installments,NA)
 
 
 
@@ -190,7 +242,7 @@ df <- gen_norm_var2(df)
 
 scoring_df <- gen_apply_score(
   empty_fields,threshold_empty,
-  df,scoring_df,products,df_Log_Flexcredit_App,
+  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh,
   period,all_df,flag_beh)
 
 
