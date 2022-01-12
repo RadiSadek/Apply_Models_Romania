@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 27006 
+#application_id <- 1
 product_id <- NA
 
 
@@ -47,19 +47,22 @@ setwd(main_dir)
 
 
 # Load other r files
+source(paste(main_dir,"Apply_Models_Romania\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Generate_Adjust_Score.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_App_Flexcredit.r", 
   sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Logistic_Beh_Flexcredit.r", 
+             sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\SQL_queries.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Useful_Functions.r", sep=""))
 
 
 # Load predefined libraries
 load("rdata\\flexcredit_app.rdata")
-
+load("rdata\\flexcredit_beh.rdata")
 
 
 ####################################
@@ -98,13 +101,62 @@ all_df$amount <- products$amount[
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
   gen_all_credits_query(db_name,all_df)), n=-1))
 if(nrow(all_credits)>0){
-  all_credits <- subset(all_credits,!is.na(all_credits$activated_at) & 
-                        all_credits$id!=application_id)
+  all_credits <- subset(all_credits,all_credits$id==application_id | 
+    (!is.na(all_credits$activated_at) & 
+    all_credits$activated_at<=all_df$created_at))
 }
 
 
+# Read all previous active or terminated credits of client
+all_id <- subset(all_credits, 
+  all_credits$id==application_id | all_credits$status %in% c(9:12,15)
+) 
+
+
 # Compute flag repeats
-flag_beh <- ifelse(nrow(all_credits)>0,1,0)
+flag_beh <- ifelse(nrow(all_id[all_id$id!=application_id,])>0,1,0)
+
+
+# Select for max delay if past AND active: must have at least 30 days of passed
+all_id_max_delay <- all_id[all_id$id != application_id,]
+all_actives_past <- subset(all_id, 
+        all_id$id!=application_id & all_id$status==9)
+if(nrow(all_actives_past)>0){
+  all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,
+        all_actives_past,all_id_max_delay)
+}
+
+
+# Get correct max days of delay (of relevant previous credits)
+nrow_all_id_max_delay <- nrow(all_id_max_delay)
+if (nrow_all_id_max_delay>=1){
+  list_ids_max_delay <- gen_select_relevant_ids(all_id_max_delay,
+      nrow_all_id_max_delay)
+  data_plan_main_select <- suppressWarnings(fetch(dbSendQuery(con, 
+      gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
+} 
+
+
+
+# Generate variables for payments of previous credits
+nrow_all_id <- nrow(all_id)
+all_id <- all_id[order(all_id$activated_at),]
+if (nrow_all_id>1){
+  prev_paid_days <- gen_prev_paid_days(all_id)
+  installments <- gen_last_total_amount(all_id)
+}
+
+
+# Compute and generate variables specific for behavioral model
+data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
+                                    data_plan_main_select,NA)
+all_df <- gen_other_rep(nrow_all_id,all_id,all_df,
+                        data_plan_main_select_def,application_id)
+
+
+# Compute ratio of number of payments
+all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/	
+    installments$installments,NA)
 
 
 
@@ -157,7 +209,7 @@ df <- gen_norm_var2(df)
 
 scoring_df <- gen_apply_score(
   empty_fields,threshold_empty,
-  df,scoring_df,products,df_Log_Flexcredit_App,
+  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh,
   period,all_df,flag_beh)
 
 
@@ -200,6 +252,18 @@ final$pd <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
              scoring_df$installments==unique(scoring_df$installments)
     [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]
 final$flag_beh <- flag_beh
+final$ownership <- all_df$ownership
+final$on_address <- all_df$on_address
+final$education <- all_df$education
+final$experience <- all_df$work_experience
+final$total_income <- all_df$total_income
+final$gender <- all_df$gender
+final$age <- all_df$age
+final$household_total <- all_df$household_total
+final$ratio_nb_payments_prev <- round(all_df$ratio_nb_payments_prev,3)
+final$max_delay <- all_df$max_delay
+final$credits_cum <- all_df$credits_cum
+final$days_diff_last_credit <- all_df$days_diff_last_credit
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,

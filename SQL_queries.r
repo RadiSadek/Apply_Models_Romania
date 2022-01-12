@@ -8,6 +8,7 @@ gen_big_sql_query <- function(db_name,application_id){
 big_sql_query <- paste("SELECT 
 ",db_name,".clients.ownership, 
 ",db_name,".clients.on_address,
+",db_name,".clients.household_total,
 ",db_name,".clients.education,
 ",db_name,".personal_data.cnp,
 ",db_name,".client_employer.work_experience,
@@ -57,7 +58,37 @@ gen_income_sql_query <- function(db_name,all_df){
 
 # Define query for getting all credits for client 
 gen_all_credits_query <- function(db_name,all_df){
-  return(paste("SELECT id, master_client_id, activated_at, amount, installments
-  FROM ",db_name,".loans 
+  return(paste("SELECT id, master_client_id, status, created_at, 
+  activated_at, amount, finished_at AS deactivated_at, 
+  installments FROM ",db_name,".loans 
   WHERE master_client_id=",all_df$master_client_id, sep =""))
+}
+
+# Define query to get the pay days of previous actives credits
+gen_plan_main_actives_past_query <- function(db_name,all_actives_past){
+  return(paste("SELECT loan_id, pay_day
+  FROM ",db_name,".loan_repayment_schedule WHERE loan_id in(", 
+               all_actives_past$id," )", sep=""))
+}
+
+# Define query to get the maximum of delay days from previous credits
+gen_plan_main_select_query <- function(db_name,list_ids_max_delay){
+  return(paste("SELECT MAX(days_delay) AS max_delay FROM ",db_name, 
+  ".loan_repayment_schedule WHERE loan_id in(",list_ids_max_delay," 
+  )", sep=""))
+}
+
+# Define query to get all payments of previous credit 
+gen_all_payments_query <- function(var,db){		
+  return(paste("SELECT transactionable_id, amount, created_at
+  FROM ",db,".transactions WHERE type = 1 AND 
+  transactionable_type = 'App\\\\Models\\\\Loans\\\\Loan' AND 
+  transactionable_id = ",var,sep =""))		
+}
+
+# Define query to get the last amount of previous credit
+gen_last_cred_installments_query <- function(var,db){
+  return(paste("SELECT installments
+  FROM ",db,".loans 
+  WHERE id=", var, sep =""))
 }
