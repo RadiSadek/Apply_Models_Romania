@@ -93,9 +93,9 @@ source(file.path(base_dir,"Useful_Functions.r"))
 
 # Load predefined libraries
 rdata <- file.path(base_dir, "rdata","flexcredit_app.rdata")
-rdata <- file.path(base_dir, "rdata","flexcredit_beh.rdata")
+rdata2 <- file.path(base_dir, "rdata","flexcredit_beh.rdata")
 load(rdata)
-
+load(rdata2)
 
 
 ####################################

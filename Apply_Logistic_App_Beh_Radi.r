@@ -65,6 +65,7 @@ load("rdata\\flexcredit_app.rdata")
 load("rdata\\flexcredit_beh.rdata")
 
 
+
 ####################################
 ### Read database and build data ###
 ####################################
@@ -141,7 +142,7 @@ if (nrow_all_id_max_delay>=1){
 # Generate variables for payments of previous credits
 nrow_all_id <- nrow(all_id)
 all_id <- all_id[order(all_id$activated_at),]
-if (nrow_all_id>1){
+if(nrow_all_id>1){
   prev_paid_days <- gen_prev_paid_days(all_id)
   installments <- gen_last_total_amount(all_id)
 }
