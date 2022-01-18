@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1
+#application_id <- 34425
 product_id <- NA
 
 
@@ -47,7 +47,10 @@ setwd(main_dir)
 
 
 # Load other r files
+source(paste(main_dir,"Apply_Models_Romania\\Additional_Restrictions.r", 
+  sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Behavioral_Variables.r", sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\CKR_variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Generate_Adjust_Score.r", sep=""))
@@ -55,7 +58,7 @@ source(paste(main_dir,"Apply_Models_Romania\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_App_Flexcredit.r", 
   sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_Beh_Flexcredit.r", 
-             sep=""))
+  sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\SQL_queries.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Useful_Functions.r", sep=""))
 
@@ -160,6 +163,10 @@ all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
     installments$installments,NA)
 
 
+# Get CCR(CKR) values
+all_df <- gen_ckr_variables(db_name,all_df,flag_beh,application_id)
+
+
 
 ############################################
 ### Compute and rework additional fields ###
@@ -204,6 +211,7 @@ df <- gen_norm_var2(df)
 
 
 
+
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -228,6 +236,10 @@ if(!("pd" %in% names(scoring_df))){
 scoring_df$created_at <- Sys.time()
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
+
+
+# Readjust scoring table by applying policy rules
+scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df)
 
 
 # Create column for table display
@@ -265,6 +277,7 @@ final$ratio_nb_payments_prev <- round(all_df$ratio_nb_payments_prev,3)
 final$max_delay <- all_df$max_delay
 final$credits_cum <- all_df$credits_cum
 final$days_diff_last_credit <- all_df$days_diff_last_credit
+final$ccr_max_delay <- all_df$ccr_max_delay
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,

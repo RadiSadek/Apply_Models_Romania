@@ -92,3 +92,13 @@ gen_last_cred_installments_query <- function(var,db){
   FROM ",db,".loans 
   WHERE id=", var, sep =""))
 }
+
+# Get CCR data
+gen_ccr_data <- function(var,db){
+  return(paste("SELECT loan_id, created_at, content
+  FROM ",db,".client_ccr_reports
+  WHERE loan_id=", var, sep =""))
+}
+
+
+

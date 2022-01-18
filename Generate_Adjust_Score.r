@@ -25,4 +25,13 @@ gen_apply_score <- function(empty_fields,threshold_empty,
   
 }
 
+# Function to apply policy rules
+gen_apply_policy <- function(scoring_df,flag_beh,all_df){
+  
+  if(flag_beh==1){
+    scoring_df <- gen_restrict_rep(scoring_df,all_df)
+  } else {
+    scoring_df <- gen_restrict_app(scoring_df,all_df)
+  }
+}
 
