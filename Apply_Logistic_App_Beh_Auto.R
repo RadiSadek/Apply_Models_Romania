@@ -75,7 +75,9 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
+source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Behavioral_Variables.r"))
+source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Cutoffs.r"))
 source(file.path(base_dir,"Empty_Fields.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
@@ -192,6 +194,10 @@ all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
     installments$installments,NA)
 
 
+# Get CCR(CKR) values
+all_df <- gen_ckr_variables(db_name,all_df,flag_beh,application_id)
+
+
 
 ############################################
 ### Compute and rework additional fields ###
@@ -260,6 +266,10 @@ if(!("pd" %in% names(scoring_df))){
 scoring_df$created_at <- Sys.time()
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
+
+
+# Readjust scoring table by applying policy rules
+scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df)
 
 
 # Create column for table display

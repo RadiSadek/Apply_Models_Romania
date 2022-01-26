@@ -6,7 +6,7 @@
 # Function to apply restrictions for application scorecard
 gen_restrict_app <- function(scoring_df,all_df){
   
-  low_amounts <- c(2000,1500,1200,100,800)
+  low_amounts <- c(2000,1500,1200,1000,800)
   high_amounts <- c(2500,2000,1500,1200,1000)
   
   if(is.na(all_df$ccr_max_delay)){

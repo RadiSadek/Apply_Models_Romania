@@ -9,12 +9,12 @@ gen_apply_score <- function(empty_fields,threshold_empty,
                             df_Log_Flexcredit_Beh,period,all_df,flag_beh){
   
   # Apply model coefficients according to type of credit 
-  if (empty_fields>=threshold_empty){
+  if (empty_fields>=threshold_empty | flag_beh==1){
     
     scoring_df$score <- "NULL"
     scoring_df$color <- 2
     
-  } else if(flag_beh==1){
+  } else if(flag_beh==10){
     scoring_df <- gen_beh_flex(df,scoring_df,products,df_Log_Flexcredit_Beh,
                                period,all_df)
   } else {
