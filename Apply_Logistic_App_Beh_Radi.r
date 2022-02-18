@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 34425
+#application_id <- 36938
 product_id <- NA
 
 
@@ -148,6 +148,7 @@ all_id <- all_id[order(all_id$activated_at),]
 if(nrow_all_id>1){
   prev_paid_days <- gen_prev_paid_days(all_id)
   installments <- gen_last_total_amount(all_id)
+  prev_amount <- gen_last_prev_amount(all_id)
 }
 
 
@@ -211,7 +212,6 @@ df <- gen_norm_var2(df)
 
 
 
-
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -239,7 +239,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 
 # Readjust scoring table by applying policy rules
-scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df)
+scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
+    application_id,prev_amount,all_id,products)
 
 
 # Create column for table display
@@ -278,6 +279,14 @@ final$max_delay <- all_df$max_delay
 final$credits_cum <- all_df$credits_cum
 final$days_diff_last_credit <- all_df$days_diff_last_credit
 final$ccr_max_delay <- all_df$ccr_max_delay
+if(flag_beh==1){
+  final$prev_amount <- prev_amount$amount
+} else {
+  final$prev_amount <- NA
+}
+final$amount <- all_df$amount
+final$highest_amount <- suppressWarnings(
+  max(scoring_df$amount[scoring_df$display_score %in% c("Yes")]))
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,

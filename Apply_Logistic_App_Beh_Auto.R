@@ -179,6 +179,7 @@ all_id <- all_id[order(all_id$activated_at),]
 if(nrow_all_id>1){
   prev_paid_days <- gen_prev_paid_days(all_id)
   installments <- gen_last_total_amount(all_id)
+  prev_amount <- gen_last_prev_amount(all_id)
 }
 
 
@@ -269,7 +270,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 
 # Readjust scoring table by applying policy rules
-scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df)
+scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
+    application_id,prev_amount,all_id,products)
 
 
 # Create column for table display

@@ -60,7 +60,7 @@ gen_income_sql_query <- function(db_name,all_df){
 gen_all_credits_query <- function(db_name,all_df){
   return(paste("SELECT id, master_client_id, status, created_at, 
   activated_at, amount, finished_at AS deactivated_at, 
-  installments FROM ",db_name,".loans 
+  installments, product_id FROM ",db_name,".loans 
   WHERE master_client_id=",all_df$master_client_id, sep =""))
 }
 
@@ -100,5 +100,17 @@ gen_ccr_data <- function(var,db){
   WHERE loan_id=", var, sep =""))
 }
 
+# Define query to get total amount of current application amount
+gen_prev_amount_query <- function(db_name,all_id){
+  return(paste("SELECT amount FROM ",db_name,
+    ".loans WHERE id=", 
+    all_id$id[nrow(all_id)-1], sep=""))
+}
 
-
+# Define query to get max installment amount per application id
+gen_max_pmt_main_query <- function(db_name,id){
+  return(paste(
+  "SELECT installment_amount AS max_pmt
+   FROM ",db_name,".loan_details
+   WHERE loan_id=",id,sep=""))
+}

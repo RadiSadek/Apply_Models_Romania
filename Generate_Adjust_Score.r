@@ -9,12 +9,12 @@ gen_apply_score <- function(empty_fields,threshold_empty,
                             df_Log_Flexcredit_Beh,period,all_df,flag_beh){
   
   # Apply model coefficients according to type of credit 
-  if (empty_fields>=threshold_empty | flag_beh==1){
+  if (empty_fields>=threshold_empty){
     
     scoring_df$score <- "NULL"
     scoring_df$color <- 2
     
-  } else if(flag_beh==10){
+  } else if(flag_beh==1){
     scoring_df <- gen_beh_flex(df,scoring_df,products,df_Log_Flexcredit_Beh,
                                period,all_df)
   } else {
@@ -26,10 +26,12 @@ gen_apply_score <- function(empty_fields,threshold_empty,
 }
 
 # Function to apply policy rules
-gen_apply_policy <- function(scoring_df,flag_beh,all_df){
+gen_apply_policy <- function(scoring_df,flag_beh,all_df,db_name,application_id,
+                             prev_amount,all_id,products){
   
   if(flag_beh==1){
-    scoring_df <- gen_restrict_rep(scoring_df,all_df)
+    scoring_df <- gen_restrict_rep(scoring_df,prev_amount,products,all_id,
+                                   all_df,db_name,application_id)
   } else {
     scoring_df <- gen_restrict_app(scoring_df,all_df)
   }

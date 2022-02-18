@@ -93,5 +93,88 @@ gen_last_total_amount <- function(all_id){
     gen_last_cred_installments_query(var$id[nrow(var)-1],db_name)), n=-1)))
 }
 
+# Get maximum previous installment amount
+gen_prev_max_installment <- function(db_name,input,all_df,application_id){
+  
+  input <- input[order(input$activated_at),]
+  input <- input[input$id!=application_id,]
+  all_df$period <- suppressWarnings(fetch(dbSendQuery
+    (con,gen_products_query_desc(db_name,all_df[1,])), n=-1))$period
+  
+  for(i in 1:nrow(input)){
+    
+    input$installment_amount[i] <- suppressWarnings(fetch(
+      dbSendQuery(con,gen_max_pmt_main_query(db_name,input$id[i])), 
+      n=-1))$max_pmt
+    input$period[i] <- suppressWarnings(fetch(dbSendQuery
+      (con,gen_products_query_desc(db_name,input[i,])), n=-1))$period
+    
+    if(input$period[i]!=all_df$period){
+      input$installment_amount[i] <- gen_correct_max_installment_po(
+        input$period[i],all_df$period,input$installment_amount[i])
+    }
+  }
+  prev_installment_amount <- max(input$installment_amount)
+  return(prev_installment_amount)
+}
+
+
+# Function to get amount of previous credit
+gen_last_prev_amount <- function(all_id){
+  var <- gen_variables_for_rep(all_id)
+  return(prev_amount <- suppressWarnings(fetch(dbSendQuery(con, 
+     gen_prev_amount_query(db_name,var)), n=-1)))
+}
+
+# Function to compute installment ratio 
+gen_installment_ratio <- function(db_name,all_id,all_df,application_id){
+  
+  # Join DPD of past credits
+  all_id_here <- all_id[all_id$status %in% c(9:12,15),]
+  all_id_here <- all_id_here[all_id_here$id!=application_id,]
+  for (i in 1:nrow(all_id_here)){
+    all_id_here$max_delay[i] <- suppressWarnings(fetch(dbSendQuery(
+      con,gen_plan_main_select_query(db_name,all_id_here$id[i])), 
+      n=-1))$max_delay
+  }
+  
+  # Subset into active and terminated
+  all_id_local <- subset(all_id_here,all_id_here$status %in% c(10,11,12))
+  all_id_local2 <- subset(all_id_here,all_id_here$status %in% c(9))
+  all_id_local_activ_not_ok <- subset(all_id_local2,
+          all_id_local2$max_delay>60)
+  
+  if(nrow(all_id_local)>0 | nrow(all_id_local2)>0){
+    
+    # Get DPD of terminated credits
+    all_id_local_tot <- all_id_local
+    all_id_local_ok <- subset(all_id_local_tot,
+                              all_id_local_tot$max_delay<=60)
+    all_id_local_not_ok <- subset(all_id_local_tot,
+                                  all_id_local_tot$max_delay>60)
+    
+    # Compute optimized previous installment amount
+    final_prev_installment_amount <-
+      ifelse(nrow(all_id_local_activ_not_ok)>0,0.6*
+             gen_prev_max_installment(db_name,all_id_local2,all_df,
+                                      application_id),
+      ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
+             1.3*gen_prev_max_installment(db_name,rbind(
+             all_id_local_ok,all_id_local2),all_df,application_id),
+      ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
+             1.1*gen_prev_max_installment(db_name,rbind(
+             all_id_local_ok,all_id_local2),all_df,application_id),
+      ifelse(nrow(all_id_local2)>0,
+             1.1*gen_prev_max_installment(db_name,all_id_local2,all_df,
+                                          application_id),
+             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
+                                        application_id)))))                          
+    
+  } else {
+    final_prev_installment_amount <- Inf
+  }
+  return(final_prev_installment_amount)
+}
+
 
 
