@@ -286,6 +286,11 @@ scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
 scoring_df <- gen_final_table_display(scoring_df)
 
 
+# Reselect columns 
+scoring_df <- scoring_df[,c("loan_id","amount","installments","score",
+  "display_score","color","pd","created_at")]
+
+
 # Update table credits applications scoring
 write_sql_query <- paste("
   DELETE FROM ",db_name,".loan_scoring WHERE loan_id=",
