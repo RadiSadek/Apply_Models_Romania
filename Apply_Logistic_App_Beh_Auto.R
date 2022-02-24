@@ -204,6 +204,14 @@ all_df <- gen_ckr_variables(db_name,all_df,flag_beh,application_id)
 ### Compute and rework additional fields ###
 ############################################
 
+# Compute flag if has current active
+if(flag_beh==1){
+  flag_active <- gen_flag_if_curr_active(all_id,application_id)
+} else {
+  flag_active <- cbind(NA,NA)
+}
+
+
 # Set period variable (monthly, twice weekly, weekly)
 period <- products_desc$period
 

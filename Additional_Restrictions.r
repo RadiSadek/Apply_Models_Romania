@@ -72,5 +72,10 @@ gen_restrict_rep <- function(scoring_df,prev_amount,products,all_id,
   return(scoring_df)
 }
 
-
+# Function to apply restrictions to refinances
+gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
+    scoring_df,flag_active,application_id,flag_credirect,flag_cashpoint){
+  
+  return(scoring_df)
+}
 

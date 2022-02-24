@@ -176,5 +176,25 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id){
   return(final_prev_installment_amount)
 }
 
+# Compute flag if has active or hidden active
+gen_flag_if_curr_active <- function(all_id,application_id){
+  
+  all_id_here <- all_id[all_id$id!=application_id,]
+  all_id_local_active <- all_id_here[all_id_here$status %in% c(9),]
+  all_id_local_term <- all_id_here[all_id_here$status %in% c(10:12),]
+  if(nrow(all_id_local_term)>0){
+    all_id_local_term <- all_id_local_term[rev(order(
+      all_id_local_term$deactivated_at)),]
+    all_id_local_term$time_to_now <- round(difftime(
+      as.Date(substring(Sys.time(),1,10)),
+      as.Date(substring(all_id_local_term$deactivated_at,1,10)),
+      units=c("days")),
+      2)
+  }
+  
+  return(cbind(ifelse(nrow(all_id_local_active)>0,1,0),
+    ifelse(nrow(all_id_local_term[all_id_local_term$time_to_now<1,])>0,1,0)))
+}
+
 
 
