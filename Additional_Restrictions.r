@@ -61,7 +61,7 @@ gen_restrict_rep <- function(scoring_df,prev_amount,products,all_id,
     all_id$amount[i] <- suppressWarnings(fetch(dbSendQuery(con,
      gen_big_sql_query(db_name,all_id$id[i])), n=-1))$amount
   }
-  max_prev_amount <- max(all_id$amount[all_id$status %in% c(9:12) & 
+  max_prev_amount <- max(all_id$amount[all_id$status %in% c(9:12,15,16) & 
                                        all_id$id!=application_id])
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
       scoring_df$amount>(max_prev_amount+1500),1,

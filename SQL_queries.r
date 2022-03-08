@@ -110,7 +110,7 @@ gen_prev_amount_query <- function(db_name,all_id){
 # Define query to get max installment amount per application id
 gen_max_pmt_main_query <- function(db_name,id){
   return(paste(
-  "SELECT installment_amount AS max_pmt
-   FROM ",db_name,".loan_details
-   WHERE loan_id=",id,sep=""))
+  "SELECT penalty + interest + principal AS installment_amount 
+  FROM ",db_name,".loan_repayment_schedule
+  WHERE deleted_at IS NULL AND loan_id=",id,sep=""))
 }

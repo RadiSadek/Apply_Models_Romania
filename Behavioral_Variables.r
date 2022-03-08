@@ -103,9 +103,9 @@ gen_prev_max_installment <- function(db_name,input,all_df,application_id){
   
   for(i in 1:nrow(input)){
     
-    input$installment_amount[i] <- suppressWarnings(fetch(
-      dbSendQuery(con,gen_max_pmt_main_query(db_name,input$id[i])), 
-      n=-1))$max_pmt
+    input$installment_amount[i] <- mean(suppressWarnings(fetch(dbSendQuery(con,
+      gen_max_pmt_main_query(db_name,input$id[i])),n=-1))$installment_amount)
+    
     input$period[i] <- suppressWarnings(fetch(dbSendQuery
       (con,gen_products_query_desc(db_name,input[i,])), n=-1))$period
     
