@@ -8,38 +8,41 @@ gen_app_flex <- function(df,scoring_df,products,df_Log_Flexcredit_App,
   
   # Cut and bin
   df$ownership <- ifelse(is.na(df$ownership),"1",
-     ifelse(df$ownership %in% c(1),"1_2",
-     ifelse(df$ownership %in% c(2),"1_2","3_4")))
+      ifelse(df$ownership %in% c(1),"1",
+      ifelse(df$ownership %in% c(2),"2","3_4")))
   df$ownership <- as.factor(df$ownership)
   
-  df$on_address <- ifelse(is.na(df$on_address),"more_60",
-     ifelse(df$on_address<=60,"0_60","more_60"))
-  df$on_address <- as.factor(df$on_address)
-  
-  df$education <- ifelse(is.na(df$education), "1_2_3",
-     ifelse(df$education==4,"4","1_2_3"))   
+  df$education <- ifelse(is.na(df$education), "1",
+      ifelse(df$education %in% c(3,4),"3_4",
+      ifelse(df$education %in% c(1,2),"1_2","1_2")))
   df$education <- as.factor(df$education)
-  
-  df$work_experience <- ifelse(is.na(df$work_experience),"more_25",
-     ifelse(df$work_experience<=6,"0_6",
-     ifelse(df$work_experience<=24,"7_24","more_25")))
-  df$work_experience <- as.factor(df$work_experience)
-  
-  df$total_income <- ifelse(
-    is.na(df$total_income),"2400_3500",
-    ifelse(df$total_income<=2400,"less_2400",
-    ifelse(df$total_income<=3500,"2400_3500",
-    ifelse(df$total_income<=4500,"3500_4500",
-    ifelse(df$total_income<=5500,"4500_5500","more_5500")))))
-  df$total_income <- as.factor(df$total_income)
   
   df$gender <- as.factor(df$gender)
   
   df$age <- 
-    ifelse(df$age<=33,"less_33",
-    ifelse(df$age<=51,"34_51",
-    ifelse(df$age<=57,"51_57","more_58")))
+    ifelse(df$age<=30,"less_30",
+    ifelse(df$age<=34,"31_34",
+    ifelse(df$age<=52,"35_52",
+    ifelse(df$age<=59,"53_59",
+    ifelse(df$age<=66,"60_66","67_more")))))
   df$age <- as.factor(df$age)
+  
+  df$on_address <- ifelse(is.na(df$on_address),"more_36",
+    ifelse(df$on_address<=36,"0_36","more_36"))
+  df$on_address <- as.factor(df$on_address)
+  
+  df$total_income <- ifelse(
+    is.na(df$total_income),"less_4500",
+    ifelse(df$total_income<=4500,"less_4500","4500_more"))
+  df$total_income <- as.factor(df$total_income)
+  
+  df$ccr_monthly_payed_cut <- 
+    ifelse(is.na(df$ccr_monthly_payed),"350_1100",
+    ifelse(df$ccr_monthly_payed<=350,"0_350",
+    ifelse(df$ccr_monthly_payed<=1100,"350_1100",
+    ifelse(df$ccr_monthly_payed<=1800,"1100_1800",
+    ifelse(df$ccr_monthly_payed<=2800,"1800_2800","more_2800")))))
+  df$ccr_monthly_payed <- as.factor(df$ccr_monthly_payed_cut)
   
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){

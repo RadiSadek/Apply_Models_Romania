@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 46338
+#application_id <- 39568
 product_id <- NA
 
 
@@ -287,6 +287,7 @@ final$max_delay <- all_df$max_delay
 final$credits_cum <- all_df$credits_cum
 final$days_diff_last_credit <- all_df$days_diff_last_credit
 final$ccr_max_delay <- all_df$ccr_max_delay
+final$ccr_monthly_payed <- all_df$ccr_monthly_payed
 if(flag_beh==1){
   final$prev_amount <- prev_amount$amount
 } else {

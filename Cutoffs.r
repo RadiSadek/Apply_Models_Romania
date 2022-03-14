@@ -5,7 +5,7 @@
 ################################################################
 
 # Application Flexcredit
-cu_app_flexcredit <- c(0.55,0.475,0.375,0.3,0.225)
+cu_app_flexcredit <- c(0.625,0.525,0.4,0.3,0.2)
 
 
 # Repeat Flexcredit
