@@ -81,8 +81,14 @@ gen_final_table_display <- function(scoring_df){
   scoring_df$display_score <- 
    ifelse(scoring_df$color %in% c(1),"No",
    ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
-  scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
+ 
+   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
+  
+  scoring_df$color <- ifelse(scoring_df$score %in% 
+    c("Indeterminate","Good 1","Good 2","Good 3","Good 4") & 
+    scoring_df$display_score=="No",2,scoring_df$color)
+  
   names(scoring_df)[names(scoring_df) == 'application_id'] <- 'loan_id'
   names(scoring_df)[names(scoring_df) == 'period'] <- 'installments'
   return(scoring_df)

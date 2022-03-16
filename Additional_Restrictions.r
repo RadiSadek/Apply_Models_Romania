@@ -64,9 +64,9 @@ gen_restrict_rep <- function(scoring_df,prev_amount,products,all_id,
   max_prev_amount <- max(all_id$amount[all_id$status %in% c(9:12,15,16) & 
                                        all_id$id!=application_id])
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
-      scoring_df$amount>(max_prev_amount+1500),1,
+      scoring_df$amount>(max_prev_amount+2000),1,
       ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",
-      "Indeterminate") & scoring_df$amount>(max_prev_amount+1000),1,
+      "Indeterminate") & scoring_df$amount>(max_prev_amount+1500),1,
       scoring_df$color))
   
   return(scoring_df)

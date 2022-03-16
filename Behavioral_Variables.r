@@ -155,19 +155,19 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id){
     
     # Compute optimized previous installment amount
     final_prev_installment_amount <-
-      ifelse(nrow(all_id_local_activ_not_ok)>0,0.6*
+      ifelse(nrow(all_id_local_activ_not_ok)>0,0.9*
              gen_prev_max_installment(db_name,all_id_local2,all_df,
                                       application_id),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
-             1.3*gen_prev_max_installment(db_name,rbind(
+             1.5*gen_prev_max_installment(db_name,rbind(
              all_id_local_ok,all_id_local2),all_df,application_id),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
-             1.1*gen_prev_max_installment(db_name,rbind(
+             1.3*gen_prev_max_installment(db_name,rbind(
              all_id_local_ok,all_id_local2),all_df,application_id),
       ifelse(nrow(all_id_local2)>0,
              1.1*gen_prev_max_installment(db_name,all_id_local2,all_df,
                                           application_id),
-             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
+             1.1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
                                         application_id)))))                          
     
   } else {
