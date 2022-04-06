@@ -18,7 +18,8 @@ big_sql_query <- paste("SELECT
 ",db_name,".loans.amount,
 ",db_name,".loans.installments,
 ",db_name,".loans.created_at,
-",db_name,".loans.product_id
+",db_name,".loans.product_id,
+",db_name,".loans.office_id
 FROM ",db_name,".loans
 LEFT JOIN ",db_name,".clients
 ON ",db_name,".loans.master_client_id = ",db_name,

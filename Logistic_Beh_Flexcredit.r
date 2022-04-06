@@ -64,7 +64,8 @@ gen_beh_flex <- function(df,scoring_df,products,df_Log_Flexcredit_Beh,
     # Apply logistic model to each amount and installment
     apply_logit <- predict(df_Log_Flexcredit_Beh, newdata=df, type="response")
     scoring_df$score[i] <- apply_logit
-    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],1)
+    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],1,
+                                            all_df$office_id)
     scoring_df$pd[i] <- round(apply_logit,3)
     scoring_df$color[i] <- 0
     scoring_df$color[i] <- ifelse(scoring_df$color[i]==1 | 

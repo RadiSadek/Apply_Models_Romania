@@ -50,7 +50,8 @@ gen_app_flex <- function(df,scoring_df,products,df_Log_Flexcredit_App,
     # Apply logistic model to each amount and installment
     apply_logit <- predict(df_Log_Flexcredit_App, newdata=df, type="response")
     scoring_df$score[i] <- apply_logit
-    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],0)
+    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],0,
+                                            all_df$office_id)
     scoring_df$pd[i] <- round(apply_logit,3)
     scoring_df$color[i] <- 0
     scoring_df$color[i] <- ifelse(scoring_df$color[i]==1 | 

@@ -4,12 +4,34 @@
 ###################################################
 
 # Define function to get apply cutoffs
-gen_group_scores <- function(var,flag_beh){
+gen_group_scores <- function(var,flag_beh,office){
+  
+  flag_office <- flag_bad_office(office)
   
   if(flag_beh==1){
-    cutoffs <- cu_beh_flexcredit
+    if(flag_office==1){
+      cutoffs <- cu_beh_flexcredit_good
+    } else if(flag_office==2){
+      cutoffs <- cu_beh_flexcredit
+    } else if(flag_office==3){
+      cutoffs <- cu_beh_flexcredit_bad
+    } else if(flag_office==4){
+      cutoffs <- cu_beh_flexcredit_worst
+    } else {
+      cutoffs <- cu_beh_flexcredit
+    }
   } else {
-    cutoffs <- cu_app_flexcredit
+    if(flag_office==1){
+      cutoffs <- cu_app_flexcredit_good
+    } else if(flag_office==2){
+      cutoffs <- cu_app_flexcredit
+    } else if(flag_office==3){
+      cutoffs <- cu_app_flexcredit_bad
+    } else if(flag_office==4){
+      cutoffs <- cu_app_flexcredit_worst
+    } else {
+      cutoffs <- cu_app_flexcredit
+    }
   }
   if (var>cutoffs[1]){output="Bad"} 
   else if (var>cutoffs[2]) {output="Indeterminate"} 
@@ -94,6 +116,18 @@ gen_final_table_display <- function(scoring_df){
   return(scoring_df)
 }
 
-
-
+# Gen flag bad office
+flag_bad_office <- function(var_off){
+  return(
+    ifelse(
+     var_off %in% c("34","1","18","42","47","2","44","39"), 1,
+    ifelse(
+     var_off %in% c("17","4","49","35","28","22","48","10","33","5",
+                    "15","41","37","11","25","29","20","13","8","19","27"), 2,
+    ifelse(
+     var_off %in% c("43","7","38","31","40","32","30","36","12","3","45"), 3,
+    ifelse(
+     var_off %in% c("14","23","16","24","51","21","26","52"), 4, 2
+    )))))
+}
 

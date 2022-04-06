@@ -296,6 +296,7 @@ if(flag_beh==1){
 final$amount <- all_df$amount
 final$highest_amount <- suppressWarnings(
   max(scoring_df$amount[scoring_df$display_score %in% c("Yes")]))
+final$office_id <- all_df$office_id
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,
