@@ -27,11 +27,14 @@ gen_apply_score <- function(empty_fields,threshold_empty,
 
 # Function to apply policy rules
 gen_apply_policy <- function(scoring_df,flag_beh,all_df,db_name,application_id,
-                             prev_amount,all_id,products){
+                             prev_amount,all_id,products,crit){
   
-  if(flag_beh==1){
+  if(flag_beh==1 & crit==0){
     scoring_df <- gen_restrict_rep(scoring_df,prev_amount,products,all_id,
-                                   all_df,db_name,application_id)
+                                   all_df,db_name,application_id,crit)
+  } else if(flag_beh==1 & crit==1){
+    scoring_df <- gen_restrict_rep2(scoring_df,prev_amount,products,all_id,
+                                   all_df,db_name,application_id,crit)
   } else {
     scoring_df <- gen_restrict_app(scoring_df,all_df)
   }

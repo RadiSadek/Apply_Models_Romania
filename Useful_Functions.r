@@ -131,3 +131,49 @@ flag_bad_office <- function(var_off){
     )))))
 }
 
+# Function to make string for DB update of PO terminated (delete offer)
+gen_string_po_terminated <- function(input){
+  string_sql_update <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql_update <- paste(string_sql_update,input$id[i],
+                                 sep=",")}}
+  return(paste("(",string_sql_update,")",sep=""))
+}
+
+
+# Define sql string query for writing in DB for PO terminated
+gen_sql_string_po_terminated <- function(input,inc){
+  return(paste("(",input$id[inc],",",
+    input$office_id[inc],",",input$client_id[inc],",",
+    input$group[inc],",",input$product_id[inc],",",
+    input$loan_id[inc],",",input$credit_amount[inc],",",
+    input$installment_amount[inc],",",input$credit_amount_updated[inc],",",
+    input$installment_amount_updated[inc],",",input$hide_until_date[inc],",",
+    input$consultant_id[inc],",'",input$created_at[inc],"',",
+    input$updated_at[inc],",",input$deleted_at[inc],")",
+         sep=""))
+}
+
+# Function  to get last credit per company 
+gen_if_credit_after_po_terminated <- function(input,table_po,name){
+  result <- as.data.frame(aggregate(
+    input$id[input$master_client_id %in% table_po$client_id],
+    by=list(input$master_client_id[input$master_client_id %in% 
+    table_po$client_id]),FUN=max))
+  names(result) <- c("master_client_id",name)
+  result <- merge(result,input[,c("id","activated_at")],by.x = name,by.y = "id",
+                  all.x = TRUE)
+}
+
+# Function to make string for DB update of PO terminated (update offer)
+gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
+  iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",var[1],sep="")
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      iterate_string <- paste(iterate_string,
+      paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
+  }
+  return(paste("UPDATE ",db_name,".clients_prior_approval_applications SET ",
+     var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}

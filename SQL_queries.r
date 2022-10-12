@@ -15,7 +15,6 @@ big_sql_query <- paste("SELECT
 ",db_name,".loans.id,
 ",db_name,".loans.amount,
 ",db_name,".loans.master_client_id,
-",db_name,".loans.amount,
 ",db_name,".loans.installments,
 ",db_name,".loans.created_at,
 ",db_name,".loans.product_id,
@@ -98,7 +97,7 @@ gen_last_cred_installments_query <- function(var,db){
 gen_ccr_data <- function(var,db){
   return(paste("SELECT loan_id, created_at, content
   FROM ",db,".client_ccr_reports
-  WHERE loan_id=", var, sep =""))
+  WHERE loan_id IN ", var, sep =""))
 }
 
 # Define query to get total amount of current application amount
@@ -114,4 +113,12 @@ gen_max_pmt_main_query <- function(db_name,id){
   "SELECT penalty + interest + principal AS installment_amount 
   FROM ",db_name,".loan_repayment_schedule
   WHERE deleted_at IS NULL AND loan_id=",id,sep=""))
+}
+
+# Define number of passed installments 
+gen_passed_installments_query <- function(db_name,id,deactivated){
+  return(paste(
+    "SELECT pay_day, pay_day 
+  FROM ",db_name,".loan_repayment_schedule
+  WHERE loan_id=",id," AND pay_day <= '",deactivated,"'",sep=""))
 }
