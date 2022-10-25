@@ -76,6 +76,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 
 # Load other r files
 source(file.path(base_dir,"Additional_Restrictions.r"))
+source(file.path(base_dir,"Adjust_Scoring_Prior_Approval.r"))
 source(file.path(base_dir,"Behavioral_Variables.r"))
 source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Cutoffs.r"))

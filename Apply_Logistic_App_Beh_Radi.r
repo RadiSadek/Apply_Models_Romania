@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 62914
+#application_id <- 57178
 product_id <- NA
 
 
@@ -49,6 +49,8 @@ setwd(main_dir)
 # Load other r files
 source(paste(main_dir,"Apply_Models_Romania\\Additional_Restrictions.r", 
   sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Adjust_Scoring_Prior_Approval.r", 
+             sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\CKR_variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
@@ -255,6 +257,11 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 # Readjust scoring table by applying policy rules
 scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
     application_id,prev_amount,all_id,products,0)
+
+
+# Correct for prior approval offers
+scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
+    scoring_df,products,period,application_id)
 
 
 # Create column for table display

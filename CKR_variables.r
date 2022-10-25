@@ -55,8 +55,6 @@ gen_get_ccr_data_max <- function(input,json){
 gen_get_index_last_6m <- function(input,json,ccr){
   
   here <- json[ , grepl(input,names(json))]
-  # here <- here[ , grepl("credit_reports.credit_report.delays_history.yr",
-  #                       names(here))][1,]
   
   # Transform json file into dataframe 
   datafr <- cbind(row.names(as.data.frame(t(here))),(as.data.frame(t(here))))

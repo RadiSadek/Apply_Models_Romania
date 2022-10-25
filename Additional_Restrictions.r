@@ -102,9 +102,11 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
   } else {
     if(all_df$period==3){
       if(max_dpd>=91){
-        max_amount <- 800} 
+        max_amount <- 800
+        max_step <- NA} 
       else if(max_dpd>=61) {
-        max_amount <- 0.8 * prev_amount$amount} 
+        max_amount <- 0.8 * prev_amount$amount
+        max_step <- NA} 
       else {
         max_amount <- NA
         if(installments_paid==1){
@@ -118,9 +120,11 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
             max_step <- 600}}}
     } else {
       if(max_dpd>=91){
-        max_amount <- 800} 
+        max_amount <- 800
+        max_step <- NA} 
       else if(max_dpd>=61) {
-        max_amount <- 0.8 * prev_amount$amount} 
+        max_amount <- 0.8 * prev_amount$amount
+        max_step <- NA} 
       else {
         max_amount <- NA
         if(installments_paid<6){
@@ -137,14 +141,14 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
   
   # Apply additional criteria to max step
   max_step <- ifelse(!(is.na(max_step)) & max_step>600 & 
-    !(is.na(all_df$ccr_criteria_last_6m)) & all_df$ccr_criteria_last_6m==0,600,
+    !(is.na(all_df$ccr_criteria_last_6m)) & all_df$ccr_criteria_last_6m>0,600,
     max_step)
   
   # Apply criteria
-  scoring_df$prev_amount <- 
-    ifelse(!is.na(max_amount),max_amount,prev_amount$amount + max_step)
+  scoring_df$allowed_amount <- ifelse(is.na(max_step),max_amount,
+    ifelse(!is.na(max_amount),max_amount,prev_amount$amount + max_step))
   scoring_df$color <- ifelse(scoring_df$score!="NULL" & 
-        scoring_df$amount>scoring_df$prev_amount,1,scoring_df$color)
+        scoring_df$amount>scoring_df$allowed_amount,1,scoring_df$color)
   
   # Apply additional criteria to installments
   if(all_df$period==1){

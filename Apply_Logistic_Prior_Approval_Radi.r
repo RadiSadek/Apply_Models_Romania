@@ -51,7 +51,7 @@ product_id <- NA
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 33
+prev_day <- Sys.Date() - 47
 
 # Read all credits
 get_actives_sql <- paste("
