@@ -51,7 +51,7 @@ product_id <- NA
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 47
+prev_day <- Sys.Date() - 45
 
 # Read all credits
 get_actives_sql <- paste("
@@ -142,8 +142,6 @@ if(nrow(select)>0){
 # Create final dataframe for writing in DB
 offers <- select
 offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
-offers$groupx <- NA
-offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$loan_id <- NA
 offers$updated_at <- NA
@@ -151,10 +149,10 @@ offers$deleted_at <- NA
 offers$credit_amount_updated <- NA
 offers$consultant_id <- NA
 offers$installment_amount_updated <- NA
-offers <- offers[,c("id","office_id","master_client_id","groupx","product_id",
-    "loan_id","max_amount","max_installment_amount",
-    "credit_amount_updated","installment_amount_updated","hide_until_date",
-    "consultant_id","created_at","updated_at","deleted_at")]
+offers <- offers[,c("id","loan_id","master_client_id","consultant_id",
+  "max_amount", "credit_amount_updated","max_installment_amount",
+  "installment_amount_updated","office_id","product_id",
+  "created_at","updated_at","deleted_at")]
 names(offers)[names(offers)=="max_amount"] <- "credit_amount"
 names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
 names(offers)[names(offers)=="master_client_id"] <- "client_id"
