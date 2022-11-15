@@ -145,13 +145,12 @@ gen_string_po_terminated <- function(input){
 # Define sql string query for writing in DB for PO terminated
 gen_sql_string_po_terminated <- function(input,inc){
   return(paste("(",input$id[inc],",",
-    input$office_id[inc],",",input$client_id[inc],",",
-    input$group[inc],",",input$product_id[inc],",",
-    input$loan_id[inc],",",input$credit_amount[inc],",",
-    input$installment_amount[inc],",",input$credit_amount_updated[inc],",",
-    input$installment_amount_updated[inc],",",input$hide_until_date[inc],",",
-    input$consultant_id[inc],",'",input$created_at[inc],"',",
-    input$updated_at[inc],",",input$deleted_at[inc],")",
+    input$loan_id[inc],",",input$client_id[inc],",",
+    input$consultant_id[inc],",",input$credit_amount[inc],",",
+    input$credit_amount_updated[inc],",",input$installment_amount[inc],",",
+    input$installment_amount_updated[inc],",",input$office_id[inc],",",
+    input$product_id[inc],",'",input$created_at[inc],"',",input$updated_at[inc],
+    ",",input$deleted_at[inc],")",
          sep=""))
 }
 

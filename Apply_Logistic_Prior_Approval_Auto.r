@@ -27,7 +27,7 @@ suppressMessages(suppressWarnings(require(jsonlite)))
 #######################
 
 # Defines the directory where the RScript is located
-base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
+base_dir <- Sys.getenv("RSCRIPTS_PATH", unset = "", names = FALSE)
 
 # Define product id
 product_id <- NA
@@ -225,6 +225,10 @@ if(nrow(offers)>0){
 ### Updating certain old offers ###
 ###################################
 
+# Check if table has any offer
+if(nrow(po_raw)>0){
+
+
 # Choose credits for updating
 po_old <- po_raw
 po_old <- subset(po_old,is.na(po_old$deleted_at))
@@ -355,7 +359,7 @@ if(nrow(po_special)>0){
    paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
    WHERE id IN",gen_string_po_terminated(po_special), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
-}
+}}
 
 
 

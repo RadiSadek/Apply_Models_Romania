@@ -51,7 +51,7 @@ product_id <- NA
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 45
+prev_day <- Sys.Date() - 47
 
 # Read all credits
 get_actives_sql <- paste("
@@ -185,6 +185,10 @@ if(nrow(offers)>0){
 ### Updating certain old offers ###
 ###################################
 
+# Check if table has any offer
+if(nrow(po_raw)>0){
+
+
 # Choose credits for updating
 po_old <- po_raw
 po_old <- subset(po_old,is.na(po_old$deleted_at))
@@ -315,7 +319,7 @@ if(nrow(po_special)>0){
    paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
    WHERE id IN",gen_string_po_terminated(po_special), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
-}
+}}
 
 
 
