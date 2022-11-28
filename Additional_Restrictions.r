@@ -102,7 +102,7 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
   } else {
     if(all_df$period==3){
       if(max_dpd>=91){
-        max_amount <- 800
+        max_amount <- 1000
         max_step <- NA} 
       else if(max_dpd>=61) {
         max_amount <- 0.8 * prev_amount$amount
@@ -113,14 +113,14 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
           max_step <- 0
         } else {
           if(max_dpd<=14){
-            max_step <- 1200
+            max_step <- 1600
           } else if(max_dpd<=30){
-            max_step <- 1000
+            max_step <- 1600
           } else {
-            max_step <- 600}}}
+            max_step <- 800}}}
     } else {
       if(max_dpd>=91){
-        max_amount <- 800
+        max_amount <- 1000
         max_step <- NA} 
       else if(max_dpd>=61) {
         max_amount <- 0.8 * prev_amount$amount
@@ -131,17 +131,17 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
           max_step <- 0
         } else {
           if(max_dpd<=14){
-            max_step <- 1200
+            max_step <- 1600
           } else if(max_dpd<=30){
-            max_step <- 1000
+            max_step <- 1600
           } else {
-            max_step <- 600}}} 
+            max_step <- 800}}} 
       }
   }
   
   # Apply additional criteria to max step
-  max_step <- ifelse(!(is.na(max_step)) & max_step>600 & 
-    !(is.na(all_df$ccr_criteria_last_6m)) & all_df$ccr_criteria_last_6m>0,600,
+  max_step <- ifelse(!(is.na(max_step)) & max_step>800 & 
+    !(is.na(all_df$ccr_criteria_last_6m)) & all_df$ccr_criteria_last_6m>0,800,
     max_step)
   
   # Apply criteria
