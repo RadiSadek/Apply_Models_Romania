@@ -91,7 +91,7 @@ product_id <- NA
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 33
+prev_day <- Sys.Date() - 1
 
 # Read all credits
 get_actives_sql <- paste("
@@ -105,7 +105,7 @@ all_credits_raw <- subset(all_credits,all_credits$status %in% c(10:12))
 select <- subset(all_credits,!is.na(all_credits$finished_at) & 
     substring(all_credits$finished_at,1,10)==prev_day)
 select <- subset(select,select$status %in% c(10:12))
-  
+
 
 
 #####################################################
@@ -232,11 +232,18 @@ if(nrow(po_raw)>0){
 # Choose credits for updating
 po_old <- po_raw
 po_old <- subset(po_old,is.na(po_old$deleted_at))
+if(nrow(po_old)==0){
+  quit()
+}
+
+
 po_old$time_past <- as.numeric(
   round(difftime(as.Date(substring(Sys.time(),1,10)),
   as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
 po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
   po_old$time_past%%30==0 & is.na(po_old$deleted_at))
+
+
 
 
 # See if any new credit created after offer
