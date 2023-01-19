@@ -85,13 +85,30 @@ load(rdata)
 product_id <- NA
 
 
+#############################
+### Read current po table ###
+#############################
+
+# Read current table
+get_po_sql <- paste("SELECT * FROM ",db_name,
+".clients_prior_approval_applications",sep="")
+po <- suppressWarnings(fetch(dbSendQuery(con,get_po_sql), n=-1))
+po_raw <- po
+
+# Read current database
+if(nrow(po)==0){
+  id_max <- 1
+} else {
+  id_max <- max(po$id)+1
+}
+
 
 ###################################################
 ### Generate data of potential credits to offer ###
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 1
+prev_day <- Sys.Date() - 182
 
 # Read all credits
 get_actives_sql <- paste("
@@ -163,20 +180,6 @@ select <- subset(select,select$max_amount>-Inf & select$max_amount<Inf)
 ### Work on final dataset and write in DB ###
 #############################################
 
-# Read current table
-get_po_sql <- paste("SELECT * FROM ",db_name,
-  ".clients_prior_approval_applications",sep="")
-po <- suppressWarnings(fetch(dbSendQuery(con,get_po_sql), n=-1))
-po_raw <- po
-
-
-# Read current database
-if(nrow(po)==0){
-  id_max <- 1
-} else {
-  id_max <- max(po$id)+1
-}
-
 if(nrow(select)>0){
 
 # Create final dataframe for writing in DB
@@ -197,6 +200,11 @@ names(offers)[names(offers)=="max_amount"] <- "credit_amount"
 names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
 names(offers)[names(offers)=="master_client_id"] <- "client_id"
 offers[is.na(offers)] <- "NULL"
+
+
+# Recorrect obsolete product ids
+offers$product_id <- ifelse(offers$product_id %in% c(1,11),12,
+  ifelse(offers$product_id %in% c(2,10),13,offers$product_id))
 
 
 # Make result ready for SQL query
@@ -228,15 +236,10 @@ if(nrow(offers)>0){
 # Check if table has any offer
 if(nrow(po_raw)>0){
 
-
 # Choose credits for updating
 po_old <- po_raw
 po_old <- subset(po_old,is.na(po_old$deleted_at))
-if(nrow(po_old)==0){
-  quit()
-}
-
-
+if(nrow(po_old)==0){quit()}
 po_old$time_past <- as.numeric(
   round(difftime(as.Date(substring(Sys.time(),1,10)),
   as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
@@ -244,9 +247,8 @@ po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
   po_old$time_past%%30==0 & is.na(po_old$deleted_at))
 
 
-
-
 # See if any new credit created after offer
+if(nrow(po_old)==0){quit()}
 po_old <- merge(po_old,gen_if_credit_after_po_terminated(
   all_credits,po_old,"last_id"),by.x = "client_id",
   by.y = "master_client_id",all.x = TRUE) 
@@ -321,7 +323,7 @@ if(substring(Sys.time(),9,10)=="01"){
       WHERE id IN",gen_string_po_terminated(po_all_not_ok), sep="")
     suppressMessages(suppressWarnings(dbSendQuery(con,po_all_not_ok_query)))
   }
-  
+
   po_all <- subset(po_all,po_all$credit_amount_updated!=-999)
   if(nrow(po_all)>0){
     po_change_query <- paste("UPDATE ",db_name,
