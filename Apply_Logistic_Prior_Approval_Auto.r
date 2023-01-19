@@ -108,7 +108,7 @@ if(nrow(po)==0){
 ###################################################
 
 # Get date of previous day
-prev_day <- Sys.Date() - 182
+prev_day <- Sys.Date() - 1
 
 # Read all credits
 get_actives_sql <- paste("
@@ -135,9 +135,12 @@ actives <- subset(all_credits,is.na(all_credits$finished_at))
 actives <- subset(actives,actives$activated_at_day>=prev_day)
 select <- select[!(select$master_client_id %in% actives$master_client_id),]
 
+# Correct for older product_id 
+select$product_id <- ifelse(select$product_id %in% c(1,11),12,
+    ifelse(select$product_id %in% c(2,10),13,select$product_id))
 
 # Products not to be included in the offers
-select <- subset(select,select$product_id %in% c(1,2,8,9))
+select <- subset(select,select$product_id %in% c(12,13,9))
 
 
 
@@ -173,6 +176,7 @@ for(i in 1:nrow(select)){
 
 # Select based on score and DPD
 select <- subset(select,select$max_amount>-Inf & select$max_amount<Inf)
+select <- subset(select,select$max_delay<=360)
 
 
 
