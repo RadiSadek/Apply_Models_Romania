@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Flexcredit_Romania\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 57178
+#application_id <- 56104
 product_id <- NA
 
 
@@ -260,8 +260,10 @@ scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
 
 
 # Correct for prior approval offers
-scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
-    scoring_df,products,period,application_id)
+# if(flag_beh==1){
+#   scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
+#     scoring_df,products,period,application_id)
+# }
 
 
 # Create column for table display

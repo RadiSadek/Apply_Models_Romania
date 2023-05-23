@@ -126,9 +126,17 @@ gen_passed_installments_query <- function(db_name,id,deactivated){
 # Read PO terminated data per client_id
 gen_po_terminated_query <- function(db_name,input){
   return(paste(
-    "SELECT id, client_id, loan_id, credit_amount, installment_amount,
+    "SELECT id, client_id, credit_amount, installment_amount,
      deleted_at, created_at, product_id 
      FROM ",db_name,".clients_prior_approval_applications 
      WHERE client_id=",input,
     sep=""))
+}
+
+# Get installment amounts of product
+gen_installment_amount_query <- function(db_name,id){
+  return(paste(
+    "SELECT amount, installments, installment_amount 
+  FROM ",db_name,".product_amounts_and_installments
+  WHERE product_id = ",id,sep=""))
 }

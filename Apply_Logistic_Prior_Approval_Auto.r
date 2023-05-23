@@ -118,7 +118,7 @@ FROM ",db_name,".loans WHERE activated_at IS NOT NULL",sep="")
 all_credits <- suppressWarnings(fetch(dbSendQuery(con,get_actives_sql), n=-1))
 all_credits_raw <- subset(all_credits,all_credits$status %in% c(10:12))
 
-# Read credit applications 
+# Read credit applications
 select <- subset(all_credits,!is.na(all_credits$finished_at) & 
     substring(all_credits$finished_at,1,10)==prev_day)
 select <- subset(select,select$status %in% c(10:12))
@@ -233,121 +233,15 @@ if(nrow(offers)>0){
 }}}
 
 
-###################################
-### Updating certain old offers ###
-###################################
-
-# Check if table has any offer
-if(nrow(po_raw)>0){
-
-# Choose credits for updating
-po_old <- po_raw
-po_old <- subset(po_old,is.na(po_old$deleted_at))
-if(nrow(po_old)==0){quit()}
-po_old$time_past <- as.numeric(
-  round(difftime(as.Date(substring(Sys.time(),1,10)),
-  as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
-po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
-  po_old$time_past%%30==0 & is.na(po_old$deleted_at))
-
-
-# See if any new credit created after offer
-if(nrow(po_old)==0){quit()}
-po_old <- merge(po_old,gen_if_credit_after_po_terminated(
-  all_credits,po_old,"last_id"),by.x = "client_id",
-  by.y = "master_client_id",all.x = TRUE) 
-po_old$criteria <- ifelse(po_old$activated_at>=po_old$created_at,0,1)
-po_old <- subset(po_old,po_old$criteria==1)
-
-
-# Update scoring to selected credits
-for(i in 1:nrow(po_old)){
-  suppressWarnings(tryCatch({
-  client_id <- po_old$client_id[i]
-  last_id <- po_old$last_id[i]
-  calc <- gen_terminated_fct(con,client_id,product_id,last_id,0)
-  po_old$credit_amount[i] <- calc[[1]]
-  po_old$installment_amount[i] <- calc[[2]]
-  po_old$max_delay[i] <- as.numeric(calc[[4]])
-  }, error=function(e){}))
-}
-
-
-# Change database
-po_not_ok <- subset(po_old,is.infinite(po_old$credit_amount))
-po_ok <- subset(po_old,!(is.infinite(po_old$credit_amount)))
-
-if(nrow(po_not_ok)>0){
-  po_not_ok$credit_amount <- -999
-  po_not_ok$installment_amount <- -999
-  po_ok_not_query <- paste("UPDATE ",db_name,
-       ".clients_prior_approval_applications SET updated_at = '",
-       substring(Sys.time(),1,19),"' WHERE id IN",
-       gen_string_po_terminated(po_not_ok), sep="")
-  suppressMessages(suppressWarnings(dbSendQuery(con,po_ok_not_query)))
-  suppressMessages(suppressWarnings(dbSendQuery(con,
-     gen_string_delete_po_terminated(po_not_ok,po_not_ok$credit_amount,
-     "credit_amount_updated",db_name))))
-  suppressMessages(suppressWarnings(dbSendQuery(con,
-     gen_string_delete_po_terminated(po_not_ok,po_not_ok$installment_amount,
-     "installment_amount_updated",db_name))))
-}
-
-if(nrow(po_ok)>0){
-  po_ok_query <- paste("UPDATE ",db_name,
-       ".clients_prior_approval_applications SET updated_at = '",
-       substring(Sys.time(),1,19),"' WHERE id IN",
-       gen_string_po_terminated(po_ok), sep="")
-  suppressMessages(suppressWarnings(dbSendQuery(con,po_ok_query)))
-  suppressMessages(suppressWarnings(dbSendQuery(con,
-    gen_string_delete_po_terminated(po_ok,po_ok$credit_amount,
-    "credit_amount_updated",db_name))))
-  suppressMessages(suppressWarnings(dbSendQuery(con,
-    gen_string_delete_po_terminated(po_ok,po_ok$installment_amount,
-    "installment_amount_updated",db_name))))
-}
-
-
-# Update at beginning of month for City Cash
-if(substring(Sys.time(),9,10)=="01"){
-  
-  po_sql_query <- paste(
-  "SELECT id, credit_amount, updated_at, installment_amount, product_id, 
-  created_at, credit_amount_updated,installment_amount_updated, deleted_at
-  FROM ",db_name,".clients_prior_approval_applications
-  WHERE deleted_at IS NULL",sep="")
-  po_all <- suppressWarnings(fetch(dbSendQuery(con,po_sql_query), n=-1))
-
-  po_all_not_ok <- subset(po_all,po_all$credit_amount_updated==-999)
-  if(nrow(po_all_not_ok)>0){
-    po_all_not_ok_query <- paste("UPDATE ",db_name,
-      ".clients_prior_approval_applications SET updated_at = '",
-      substring(Sys.time(),1,19),"', deleted_at = '",
-      paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
-      WHERE id IN",gen_string_po_terminated(po_all_not_ok), sep="")
-    suppressMessages(suppressWarnings(dbSendQuery(con,po_all_not_ok_query)))
-  }
-
-  po_all <- subset(po_all,po_all$credit_amount_updated!=-999)
-  if(nrow(po_all)>0){
-    po_change_query <- paste("UPDATE ",db_name,
-      ".clients_prior_approval_applications SET updated_at = '",
-      substring(Sys.time(),1,19),"' WHERE id IN",
-      gen_string_po_terminated(po_all), sep="")
-    suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
-    suppressMessages(suppressWarnings(dbSendQuery(con,
-      gen_string_delete_po_terminated(po_all,po_all$credit_amount_updated,
-      "credit_amount",db_name))))
-    suppressMessages(suppressWarnings(dbSendQuery(con,
-      gen_string_delete_po_terminated(po_all,po_all$installment_amount_updated,
-      "installment_amount",db_name))))
-  }
-}
-
 
 ######################################################
 ### Check for special cases and delete immediately ###
 ######################################################
+
+# Remove obsolete offers
+suppressMessages(suppressWarnings(dbSendQuery(con,paste(
+"DELETE FROM ",db_name,".clients_prior_approval_applications 
+WHERE credit_amount = 0",sep=""))))
 
 # Read special cases (deceased and gdrk marketing clients) 
 get_special_sql <- paste("
@@ -372,7 +266,7 @@ if(nrow(po_special)>0){
    paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
    WHERE id IN",gen_string_po_terminated(po_special), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
-}}
+}
 
 
 

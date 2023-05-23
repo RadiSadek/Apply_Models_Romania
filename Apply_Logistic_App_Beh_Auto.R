@@ -290,6 +290,13 @@ scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
     application_id,prev_amount,all_id,products,0)
 
 
+# Correct for prior approval offers
+#if(flag_beh==1){
+#  scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
+#   scoring_df,products,period,application_id)
+# }
+
+
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
 
