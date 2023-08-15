@@ -288,6 +288,7 @@ final$pd <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
                           & 
              scoring_df$installments==unique(scoring_df$installments)
     [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]
+final$product_id <- all_df$product_id
 final$flag_beh <- flag_beh
 final$ownership <- all_df$ownership
 final$on_address <- all_df$on_address

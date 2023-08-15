@@ -67,10 +67,21 @@ gen_restrict_rep <- function(scoring_df,prev_amount,products,all_id,
   } else {
     max_prev_amount <- max(all_id$amount[all_id$status %in% c(9:12,15,16)])
   }
+  
+  # Define allowed amounts according to whether the app is online or not 
+  allowed_step_higher <- c(1500,2000)
+  allowed_step_lower <- c(1000,1700)
+  if(all_df$product_id==14){
+    allowed_step <- allowed_step_lower
+  } else {
+    allowed_step <- allowed_step_higher
+  }
+  
+  # Apply hard max step 
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
-      scoring_df$amount>(max_prev_amount+2000),1,
+      scoring_df$amount>(max_prev_amount+allowed_step[2]),1,
       ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",
-      "Indeterminate") & scoring_df$amount>(max_prev_amount+1500),1,
+      "Indeterminate") & scoring_df$amount>(max_prev_amount+allowed_step[1]),1,
       scoring_df$color))
   
   return(scoring_df)
@@ -95,17 +106,26 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
      gen_passed_installments_query(db_name,application_id,
      substring(all_id$deactivated_at[all_id$id==application_id],1,10))),n=-1)))
   
+  # Define allowed amounts according to whether 
+  allowed_amounts_higher <- c(1000,1200,2000)
+  allowed_amounts_lower <- c(1000,1000,1500)
+  if(all_df$product_id==14){
+    allowed_amounts <- allowed_amounts_lower
+  } else {
+    allowed_amounts <- allowed_amounts_higher
+  }
   
+  # Apply repeat conditions
   if(is.na(max_dpd) | is.na(installments_paid)){
     max_amount <- NA
     max_step <- 0
   } else {
     if(all_df$period==3){
       if(max_dpd>=91){
-        max_amount <- 1000
+        max_amount <- allowed_amounts[1]
         max_step <- NA} 
       else if(max_dpd>=61) {
-        max_amount <- max(0.8 * prev_amount$amount,1200)
+        max_amount <- max(0.8 * prev_amount$amount,allowed_amounts[2])
         max_step <- NA} 
       else {
         max_amount <- NA
@@ -113,17 +133,17 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
           max_step <- 0
         } else {
           if(max_dpd<=14){
-            max_step <- 2000
+            max_step <- allowed_amounts[3]
           } else if(max_dpd<=30){
-            max_step <- 2000
+            max_step <- allowed_amounts[3]
           } else {
-            max_step <- 1200}}}
+            max_step <- allowed_amounts[2]}}}
     } else {
       if(max_dpd>=91){
-        max_amount <- 1000
+        max_amount <- allowed_amounts[1]
         max_step <- NA} 
       else if(max_dpd>=61) {
-        max_amount <- max(0.8 * prev_amount$amount,1200)
+        max_amount <- max(0.8 * prev_amount$amount,allowed_amounts[2])
         max_step <- NA} 
       else {
         max_amount <- NA
@@ -131,18 +151,18 @@ gen_restrict_rep2 <- function(scoring_df,prev_amount,products,all_id,
           max_step <- 0
         } else {
           if(max_dpd<=14){
-            max_step <- 2000
+            max_step <- allowed_amounts[3]
           } else if(max_dpd<=30){
-            max_step <- 2000
+            max_step <- allowed_amounts[3]
           } else {
-            max_step <- 1200}}} 
+            max_step <- allowed_amounts[2]}}} 
       }
   }
   
   # Apply additional criteria to max step
-  max_step <- ifelse(!(is.na(max_step)) & max_step>1200 & 
-    !(is.na(all_df$ccr_criteria_last_6m)) & all_df$ccr_criteria_last_6m>0,1200,
-    max_step)
+  max_step <- ifelse(!(is.na(max_step)) & max_step>allowed_amounts[2] & 
+    !(is.na(all_df$ccr_criteria_last_6m)) & 
+    all_df$ccr_criteria_last_6m>0,allowed_amounts[2],max_step)
   
   # Apply criteria
   scoring_df$allowed_amount <- ifelse(is.na(max_step),max_amount,
