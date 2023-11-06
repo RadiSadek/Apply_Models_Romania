@@ -6,7 +6,7 @@
 #                          Version 1.0 (2021/10/06)                            #
 ################################################################################
 
-
+options(warn = -1)
 
 ########################
 ### Initial settings ###
@@ -32,13 +32,13 @@ con <- dbConnect(MySQL(), user=db_user, password=db_password,
 
 
 # Define work directory
-main_dir <- "C:\\Users\\User\\Desktop\\myAnalyses\\Romania\\Scoring\\"
+main_dir <- "C:\\Users\\User\\Documents\\Romania\\"
 
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 106579
+#application_id <- 97131
 product_id <- NA
 
 
@@ -48,27 +48,27 @@ setwd(main_dir)
 
 # Load other r files
 source(paste(main_dir,"Apply_Models_Romania\\Additional_Restrictions.r", 
-  sep=""))
+             sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Adjust_Scoring_Prior_Approval.r", 
              sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\CKR_variables.r", sep=""))
-source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
+# source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Cutoffs_Sue.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Generate_Adjust_Score.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_App_Flexcredit.r", 
-  sep=""))
+             sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Logistic_Beh_Flexcredit.r", 
-  sep=""))
+             sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\SQL_queries.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Useful_Functions.r", sep=""))
 
 
 # Load predefined libraries
 load("rdata\\flexcredit_app.rdata")
-load("rdata\\flexcredit_beh.rdata")
-
+load("rdata\\flexcredit_beh_sue.rdata")
 
 
 ####################################
@@ -77,7 +77,7 @@ load("rdata\\flexcredit_beh.rdata")
 
 # Read credits applications
 all_df <- suppressWarnings(fetch(dbSendQuery(con, 
-              gen_big_sql_query(db_name,application_id)), n=-1))
+                                             gen_big_sql_query(db_name,application_id)), n=-1))
 
 
 # Apply some checks to main credit dataframe
@@ -91,37 +91,37 @@ if(nrow(all_df)>1){
 
 # Read product's periods and amounts
 products  <- suppressWarnings(fetch(dbSendQuery(con, 
-   gen_products_query(db_name,all_df)), n=-1))
+                                                gen_products_query(db_name,all_df)), n=-1))
 products_desc <- suppressWarnings(fetch(dbSendQuery(con, 
-   gen_products_query_desc(db_name,all_df)), n=-1))
+                                                    gen_products_query_desc(db_name,all_df)), n=-1))
 
 
 # Get closets to product amount and installments 
 all_df$installments <- products$installments[
-   which.min(abs(products$installments - all_df$installments))]
+  which.min(abs(products$installments - all_df$installments))]
 all_df$amount <- products$amount[
-   which.min(abs(products$amount - all_df$amount))]
+  which.min(abs(products$amount - all_df$amount))]
 
 
 # Get period 
 all_df <- merge(all_df,products_desc[,c("id","period")],
-       by.x = "product_id",by.y = "id",all.x = TRUE)
+                by.x = "product_id",by.y = "id",all.x = TRUE)
 
 
 # Check all credits of client
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
-  gen_all_credits_query(db_name,all_df)), n=-1))
+                                                  gen_all_credits_query(db_name,all_df)), n=-1))
 all_credits_raw <- all_credits
 if(nrow(all_credits)>0){
   all_credits <- subset(all_credits,all_credits$id==application_id | 
-    (!is.na(all_credits$activated_at) & 
-    all_credits$activated_at<=all_df$created_at))
+                          (!is.na(all_credits$activated_at) & 
+                             all_credits$activated_at<=all_df$created_at))
 }
 
 
 # Read all previous active or terminated credits of client
 all_id <- subset(all_credits, 
-  all_credits$id==application_id | all_credits$status %in% c(9:12,15)
+                 all_credits$id==application_id | all_credits$status %in% c(9:12,15)
 ) 
 
 
@@ -132,10 +132,10 @@ flag_beh <- ifelse(nrow(all_id[all_id$id!=application_id,])>0,1,0)
 # Select for max delay if past AND active: must have at least 30 days of passed
 all_id_max_delay <- all_id[all_id$id != application_id,]
 all_actives_past <- subset(all_id, 
-        all_id$id!=application_id & all_id$status==9)
+                           all_id$id!=application_id & all_id$status==9)
 if(nrow(all_actives_past)>0){
   all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,
-        all_actives_past,all_id_max_delay)
+                                                        all_actives_past,all_id_max_delay)
 }
 
 
@@ -143,9 +143,9 @@ if(nrow(all_actives_past)>0){
 nrow_all_id_max_delay <- nrow(all_id_max_delay)
 if (nrow_all_id_max_delay>=1){
   list_ids_max_delay <- gen_select_relevant_ids(all_id_max_delay,
-      nrow_all_id_max_delay)
+                                                nrow_all_id_max_delay)
   data_plan_main_select <- suppressWarnings(fetch(dbSendQuery(con, 
-      gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
+                                                              gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
 } 
 
 
@@ -168,7 +168,7 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,
 
 # Compute ratio of number of payments
 all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/	
-    installments$installments,NA)
+                                          installments$installments,NA)
 
 
 # Get CCR(CKR) values
@@ -199,7 +199,7 @@ all_df <- gen_norm_var(period,all_df,products,1)
 
 # Compute income variables
 all_df$total_income <- suppressWarnings(fetch(dbSendQuery(con, 
-   gen_income_sql_query (db_name,all_df)), n=-1))$total_income
+                                                          gen_income_sql_query (db_name,all_df)), n=-1))$total_income
 
 
 # Read relevant product amounts (not superior to amount of application)
@@ -256,7 +256,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Readjust scoring table by applying policy rules
 scoring_df <- gen_apply_policy(scoring_df,flag_beh,all_df,db_name,
-    application_id,prev_amount,all_id,products,0)
+                               application_id,prev_amount,all_id,products,0)
 
 
 # Correct for prior approval offers
@@ -272,22 +272,22 @@ scoring_df <- gen_final_table_display(scoring_df)
 
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$loan_id[1],
- scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
-   [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-                    & 
- scoring_df$installments==unique(scoring_df$installments)
-   [which.min(abs(all_df$installments - unique(scoring_df$installments)))]],
- scoring_df$display_score[scoring_df$amount== unique(scoring_df$amount)
-   [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-                  & 
- scoring_df$installments==unique(scoring_df$installments)
- [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]))
+                             scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
+                                              [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                                              & 
+                                                scoring_df$installments==unique(scoring_df$installments)
+                                              [which.min(abs(all_df$installments - unique(scoring_df$installments)))]],
+                             scoring_df$display_score[scoring_df$amount== unique(scoring_df$amount)
+                                                      [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                                                      & 
+                                                        scoring_df$installments==unique(scoring_df$installments)
+                                                      [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]))
 names(final) <- c("id","score","display_score")
 final$pd <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
-    [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                          [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
                           & 
-             scoring_df$installments==unique(scoring_df$installments)
-    [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]
+                            scoring_df$installments==unique(scoring_df$installments)
+                          [which.min(abs(all_df$installments - unique(scoring_df$installments)))]]
 final$product_id <- all_df$product_id
 final$flag_beh <- flag_beh
 final$ownership <- all_df$ownership
@@ -315,12 +315,12 @@ final$highest_amount <- suppressWarnings(
   max(scoring_df$amount[scoring_df$display_score %in% c("Yes")]))
 final$office_id <- all_df$office_id
 
-# # Read and write
-# final_exists <- read.xlsx(paste(main_dir,
-#   "\\Monitoring\\Files\\Scored_Credits.xlsx", sep=""))
-# final <- rbind(final_exists, final)
-# write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits2.xlsx", 
-#   sep=""))
+# Read and write
+final_exists <- read.xlsx(paste(main_dir,
+                                "\\Manual_scoring\\Scored_Credits.xlsx", sep=""))
+final <- rbind(final_exists, final)
+write.xlsx(final, paste(main_dir,"\\Manual_scoring\\Scored_Credits.xlsx", 
+                        sep=""))
 
 
 
