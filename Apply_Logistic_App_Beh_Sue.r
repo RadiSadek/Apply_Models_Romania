@@ -1,4 +1,5 @@
-
+#dbDisconnect(con)
+rm(list=ls())
 
 ################################################################################
 #               Joint script for Application and Behavioral scoring            #
@@ -38,7 +39,8 @@ main_dir <- "C:\\Users\\User\\Documents\\Romania\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 97131
+# application_id <- 89173 # beh
+# application_id <- 126922 # app
 product_id <- NA
 
 
@@ -54,7 +56,7 @@ source(paste(main_dir,"Apply_Models_Romania\\Adjust_Scoring_Prior_Approval.r",
 source(paste(main_dir,"Apply_Models_Romania\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\CKR_variables.r", sep=""))
 # source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
-source(paste(main_dir,"Apply_Models_Romania\\Cutoffs_Sue.r", sep=""))
+source(paste(main_dir,"Apply_Models_Romania\\Cutoffs.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Generate_Adjust_Score.r", sep=""))
 source(paste(main_dir,"Apply_Models_Romania\\Normal_Variables.r", sep=""))
@@ -67,9 +69,9 @@ source(paste(main_dir,"Apply_Models_Romania\\Useful_Functions.r", sep=""))
 
 
 # Load predefined libraries
-load("rdata\\flexcredit_app.rdata")
-load("rdata\\flexcredit_beh_sue.rdata")
-
+load("Apply_Models_Romania\\rdata\\flexcredit_app_coeffs.rdata")
+load("Apply_Models_Romania\\rdata\\flexcredit_beh_coeffs.rdata")
+#load("Apply_Models_Romania\\rdata\\flexcredit_beh.rdata")
 
 ####################################
 ### Read database and build data ###
@@ -234,7 +236,7 @@ df <- gen_norm_var2(df)
 
 scoring_df <- gen_apply_score(
   empty_fields,threshold_empty,
-  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh,
+  df,scoring_df,products,df_Log_Flexcredit_App_coeffs,df_Log_Flexcredit_Beh_coeffs,
   period,all_df,flag_beh)
 
 
@@ -315,11 +317,12 @@ final$highest_amount <- suppressWarnings(
   max(scoring_df$amount[scoring_df$display_score %in% c("Yes")]))
 final$office_id <- all_df$office_id
 
+
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,
-  "\\Manual_scoring\\Scored_Credits.xlsx", sep=""))
+  "\\Manual_scoring\\Scored_Credits_BEH_new.xlsx", sep=""))
 final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"\\Manual_scoring\\Scored_Credits.xlsx", 
+write.xlsx(final, paste(main_dir,"\\Manual_scoring\\Scored_Credits_BEH_new.xlsx",
   sep=""))
 
 

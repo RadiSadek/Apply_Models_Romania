@@ -3,7 +3,7 @@
 ######## Functions to apply logisit regression on application City Cash ######
 ##############################################################################
 
-gen_app_flex <- function(df,scoring_df,products,df_Log_Flexcredit_App,
+gen_app_flex <- function(df,scoring_df,products,coefficients,
                              period,all_df){
   
   # Cut and bin
@@ -48,7 +48,9 @@ gen_app_flex <- function(df,scoring_df,products,df_Log_Flexcredit_App,
   for(i in 1:nrow(scoring_df)){
     
     # Apply logistic model to each amount and installment
-    apply_logit <- predict(df_Log_Flexcredit_App, newdata=df, type="response")
+    # apply_logit <- predict(df_Log_Flexcredit_App, newdata=df, type="response")
+    apply_logit <- gen_apply_model(df, coefficients)
+    
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],0,
                                             all_df$office_id)

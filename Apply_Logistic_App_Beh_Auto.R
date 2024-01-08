@@ -95,8 +95,8 @@ source(file.path(base_dir,"Useful_Functions.r"))
 ########################
 
 # Load predefined libraries
-rdata <- file.path(base_dir, "rdata","flexcredit_app.rdata")
-rdata2 <- file.path(base_dir, "rdata","flexcredit_beh.rdata")
+rdata <- file.path(base_dir, "rdata","flexcredit_app_coeffs.rdata")
+rdata2 <- file.path(base_dir, "rdata","flexcredit_beh_coeffs.rdata")
 load(rdata)
 load(rdata2)
 
@@ -264,8 +264,8 @@ df <- gen_norm_var2(df)
 ############################################################
 
 scoring_df <- gen_apply_score(
-  empty_fields,threshold_empty,
-  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh,
+  empty_fields,threshold_empty,df,scoring_df,products,
+  df_Log_Flexcredit_App_coeffs,df_Log_Flexcredit_Beh_coeffs,
   period,all_df,flag_beh)
 
 

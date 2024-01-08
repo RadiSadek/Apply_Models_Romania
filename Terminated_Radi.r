@@ -30,7 +30,7 @@ source(paste(main_dir,"Apply_Models_Romania\\Useful_Functions.r", sep=""))
   
 # Load predefined libraries
 load("rdata\\flexcredit_app.rdata")
-load("rdata\\flexcredit_beh.rdata")
+load("rdata\\flexcredit_beh_coeffs.rdata")
   
   
   

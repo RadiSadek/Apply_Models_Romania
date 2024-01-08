@@ -177,3 +177,23 @@ gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
   return(paste("UPDATE ",db_name,".clients_prior_approval_applications SET ",
      var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
+
+# Apply general linear models
+
+gen_apply_model <- function(input,coefficients){
+  input <- as.data.frame(t(input))
+  input$vars <- rownames(input)
+  names(input) <- c("values","vars")
+  
+  input$vars_value <- paste(input$vars,input$values,sep="")
+  #coefficients$vars <- rownames(coefficients)
+  result <- merge(input,coefficients,by.x = "vars_value",by.y = "vars")
+  if(nrow(result)>0){
+    pd <- 1/(1+exp(-sum(result$coeff,coefficients$coeff
+                        [coefficients$vars=="(Intercept)"])))
+  } else{
+    pd <- 1/(1+exp(-sum(coefficients$coeff
+                        [coefficients$vars=="(Intercept)"])))
+  }
+  return(pd) 
+}
