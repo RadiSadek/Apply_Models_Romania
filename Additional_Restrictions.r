@@ -17,6 +17,7 @@ gen_restrict_app <- function(scoring_df,all_df){
     amounts <- low_amounts
   }
   
+  # Apply score 
   scoring_df$color <- 
     ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
     ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>amounts[1],1,
@@ -25,7 +26,15 @@ gen_restrict_app <- function(scoring_df,all_df){
     ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>amounts[4],1,
     ifelse(scoring_df$score %in% c("Indeterminate") & 
           scoring_df$amount>amounts[5],1,scoring_df$color))))))
-
+  is_online <- ifelse(!is.na(all_df$product_id) & all_df$product_id==14,1,0)
+  
+  # Remove Indterminate
+  if(is_online==1){
+    scoring_df$color <- 
+       ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+       ifelse(scoring_df$score %in% c("Indeterminate","Good 1"),1,
+              scoring_df$color))
+  }
   return(scoring_df)
 }
 
