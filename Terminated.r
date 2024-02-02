@@ -226,7 +226,7 @@ df <- gen_norm_var2(df)
   
 scoring_df <- gen_apply_score(
   empty_fields,threshold_empty,
-  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh,
+  df,scoring_df,products,df_Log_Flexcredit_App,df_Log_Flexcredit_Beh_coeffs,
   period,all_df,flag_beh)
   
   
