@@ -140,7 +140,7 @@ select$product_id <- ifelse(select$product_id %in% c(1,11),12,
     ifelse(select$product_id %in% c(2,10),13,select$product_id))
 
 # Products not to be included in the offers
-select <- subset(select,select$product_id %in% c(12,13,9))
+select <- subset(select,select$product_id %in% c(12,13,9,14))
 
 
 
