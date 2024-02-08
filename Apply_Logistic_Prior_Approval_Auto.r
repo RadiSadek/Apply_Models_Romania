@@ -38,19 +38,19 @@ product_id <- NA
 ####### MySQL #######
 #####################
 
-db_host <- Sys.getenv("DB_HOST", 
+db_host <- Sys.getenv("SCORING_DB_HOST", 
                       unset = "localhost", 
                       names = FALSE)
-db_port <- strtoi(Sys.getenv("DB_PORT", 
+db_port <- strtoi(Sys.getenv("SCORING_DB_PORT", 
                              unset = "3306", 
                              names = FALSE))
-db_name <- Sys.getenv("DB_DATABASE", 
+db_name <- Sys.getenv("SCORING_DB_DATABASE", 
                       unset = "citycash", 
                       names = FALSE)
-db_username <- Sys.getenv("DB_USERNAME", 
+db_username <- Sys.getenv("SCORING_DB_USERNAME", 
                           unset = "root", 
                           names = FALSE)
-db_password <- Sys.getenv("DB_PASSWORD", 
+db_password <- Sys.getenv("SCORING_DB_PASSWORD", 
                           unset = "secret", 
                           names = FALSE)
 con <- dbConnect(MySQL(), user=db_username, 
